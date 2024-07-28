@@ -1,0 +1,58 @@
+\defmodule {PRIM}
+
+This module provides some procedures to search for integers
+$m$ that are prime, for which $r = (m^k-1)/(m-1)$ is also prime
+for certain values of $k$, and perhaps for which $(m-1)/2$ is also
+prime.  The values of $r$ are always represented as {\tt SuperInteger}'s.
+
+\bigskip\hrule
+\code
+
+DEFINITION MODULE PRIM;
+
+FROM SUPINT   IMPORT SuperInteger;
+FROM SUPFACT  IMPORT Factors;
+
+
+PROCEDURE Trier (VAR L : Factors);
+\endcode
+ \tab 
+  Sorts the factors in the list {\tt L} in {\em decreasing\/} order.
+ \endtab
+\code
+
+PROCEDURE SFindPrimer (k, e : LONGINT;  S1, S2 : SuperInteger;  
+                       Safe : BOOLEAN);
+\endcode
+ \tab
+  Finds and prints all integers $m$ such that $S_1 \le m \le S_2$ and    
+  such that both $m$ and $r = (m^k-1)/(m-1)$ are prime.   
+  If {\tt Safe = TRUE}, it is also required that $(m-1) / 2$ be prime.
+  If $k=1$, then $r$ is considered prime.  
+  The retained $m$ are printed in decreasing order,
+  in the form $m = 2^e \pm x$ and also as decimal integers. 
+  The factors of $m-1$ are also printed.
+ \endtab
+\code
+
+PROCEDURE FindPrimer (k, m0, m1 : LONGINT;  Safe : BOOLEAN);
+\endcode
+ \tab
+  Similar to {\tt SFindPrimemr}, but for values of $m$ less than 
+  $2^{31}$.
+ \endtab
+\code
+
+PROCEDURE FindPrimesmr 
+      (k, e, c1, c2 : LONGINT;  Safe : BOOLEAN;   F : ARRAY OF CHAR);
+\endcode
+ \tab
+   Calls {\tt SFindPrimer} for $S_1 = 2^e + c_1$ and $S_2 = 2^e + c_2$, 
+   creates the file {\tt F} and prints the results in it.
+ \endtab
+\code
+
+END PRIM.
+\endcode
+
+

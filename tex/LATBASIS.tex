@@ -1,0 +1,246 @@
+\defmodule {LATBASIS}
+
+This module offers tools to manipulate lattice bases
+(see Section 1.3).
+Each lattice is represented by a basis $V$ and its dual $W$.
+It is sometimes possible, as in the case with lattices associated with
+LCGs or MRGs, to multiply a lattice (and its dual) by a constant factor
+in such a way that they are included in $\Z^t$, allowing exact representation
+of basis vector coordinates.
+The duality relation will now read $V_i\cdot W_j = m\delta_{ij}$
+for some integer constant {$m$}.
+
+\iffalse  %%%%%%%%%%%%%
+There is a choice between two representations for the vector coordinates:
+{\tt LONGREAL} or {\tt SuperInteger}.
+The latter is a type defined in a package named SENTIERS which
+offers tools for manipulating arbitrary large integers.
+The {\tt SuperInteger} representation should be used
+when the coordinates of the (dual) basis vectors, are too large
+to fit a {\tt LONGREAL} without loss of precision.
+But computations are then much slower.
+The program {\tt select} decides which one is used.
+All computations will be performed using appropriate procedures,
+depending on the representation.
+\fi  %%%%%%%%%%%%%%%%%
+
+The squared lengths of the basis vectors and that of their duals
+are stored as {\tt LONGREAL} in {\tt VVLR} and {\tt WWLR} respectively.
+However, if they are too large to fit in a {\tt LONGREAL},
+even approximately, then {\tt SISquares} is set to {\tt TRUE} and
+they are stored as {\tt SuperInteger} in {\tt VVSI} and {\tt WWSI}.  
+
+A variable of type {\tt Basis} is created by calling {\tt CreateBasis}.
+The squared vector lengths {\tt VVLR} and {\tt WWLR} 
+(or {\tt VVSI} and {\tt WWSI})
+can then be updated by calling {\tt UpdateVVWW}.
+But it is not necessary to update them before calling any of the procedures
+of the modules {\tt REDBAS} and {\tt REDBAS2}
+(including {\tt ReductMinkowski} and {\tt ShortestVector}).
+
+\bigskip\hrule
+\code
+
+DEFINITION MODULE LATBASIS;
+
+FROM SUPINT  IMPORT SuperInteger;
+
+IMPORT BASISLR, BASISSI;
+FROM BASIS    IMPORT BMatr, BScal;
+FROM CONFIG   IMPORT BDim;
+FROM NORM     IMPORT NormType;
+FROM MULT     IMPORT MScal;
+
+TYPE
+   Basis = POINTER TO InfoBasis;
+   InfoBasis = RECORD
+      ResDim     : BDim;             (* Dimension of allocated memory.      *)
+      Dim        : BDim;             (* Actual dimension.                   *)
+      mLR        : LONGREAL;         (* Modulus m.                          *)
+      mSI        : SuperInteger;     (* Modulus m.                          *)
+      mLR2       : LONGREAL;         (* m^2, rescaled if SISquares.         *)
+      mSI2       : SuperInteger;     (* Value of m^2 when SISquares.        *)
+      V, W       : BMatr;            (* Basis and dual basis vectors.       *)
+      Norm       : NormType;
+      Lmin, Lmin2  : LONGREAL;       (* Length and squared length of shor-  *)
+                                     (* test basis vector, using Norm.      *)
+                                     (* Different meaning in REDBB.         *)
+      SISquares    : BOOLEAN;
+      VVLR, WWLR   : BASISLR.BVect;  (* Squared Euclidean vector lengths,   *)
+                                     (* if not SISquares.                   *)
+      EchVV, EchWW : SuperInteger;   (* Scaling factors when SISquares.     *)
+      VVSI, WWSI : BASISSI.BVect;    (* Rescaled squared Euclidean vector   *)
+                                     (* lengths, if SISquares.              *)
+      XX : ARRAY BDim OF BOOLEAN;    (* Used for ReductMinkowski only.      *)
+                                     (* Ask R. Couture for details.         *)
+      END;
+\endcode
+  \tabb
+   A lattice basis.  
+   {\tt ResDim} is the dimension of the arrays allocated for the basis
+   (the maximum value that {\tt Dim} can take).
+   The memory for the {\tt BVect} and {\tt BMatr} elements is allocated
+   for dimensions 0 to {\tt ResDim} if {\tt ResDim} $> 0$, whereas
+   no memory is allocated if {\tt ResDim} $= 0$.
+
+   {\tt Dim} is the current dimension of the basis,
+   {\tt V} contains the basis, and {\tt W} the $m$-dual basis. 
+   The integer constant $m$ used in the duality relation is stored
+   as a {\tt LONGREAL} in {\tt mLR}, and as a {\tt SuperInteger}
+   in {\tt mSI}.
+
+   {\tt Norm} is the type of norm used to measure the vector lengths.
+   {\tt Lmin} and {\tt Lmin2} are used to store the length and the 
+   squared length of the shortest vector found to date, using this norm.
+   (Usually, only one of these 2 variables is used at a time; 
+   see {\tt REDBAS}.)
+
+   The boolean {\tt SISquares} is set to {\tt TRUE} by {\tt InitBasis}
+   when $m$ exceeds approximately $2^{480}$, and to {\tt FALSE} otherwise.
+
+   When {\tt SISquares = FALSE}, {\tt mLR2} contains the value of $m^2$,
+   {\tt VVLR} and {\tt WWLR} {\em may\/} memorize the squared Euclidean 
+   lengths of the vectors in $V$ and in $W$. 
+   They are not always updated, and when they are not, they
+   are set to negative values.
+
+   When {\tt SISquares = TRUE}, {\tt mSI2} contains $m^2$,
+   {\tt mLR2} contains $m^2$ divided (rescaled) by {\tt EchVV * EchWW},
+   the squared Euclidean vector lengths (again, not always updated),
+   are stored in {\tt VVSI} and {\tt WWSI}, and 
+   {\tt Lmin2} is rescaled by {\tt EchVV}.
+   Also, the squared vector lengths rescaled by the factors
+   {\tt EchVV} and {\tt EchWW}, are put in {\tt VVLR} and {\tt WWLR},
+   respectively, by {\tt SetScale}.
+   The scaling factors {\tt EchVV} and {\tt EchWW} are computed
+   by the procedure {\tt SetScale} and set to values such that
+   the log of the squared Euclidean length of the longest vector is 
+   not too far from 0.  
+   The aim of this rescaling is to avoid {\tt LONGREAL} overflow.
+   \endtabb
+%\hide
+%VAR
+%   (* This has been moved to  BASIS^.XX  in LATBASIS.  *)
+%   XX  : ARRAY BDim OF BOOLEAN;    (* ??? *)    
+%\endhide
+\code
+
+PROCEDURE CreateBasis (VAR B : Basis);
+\endcode
+ \tab Creates the data structure {\tt B} for a basis. 
+    {\tt SISquares} is initialized to {\tt FALSE},
+    {\tt Norm\/} is initialized to {\tt L2Norm},
+    and {\tt ResDim} is set to 0.
+    One must then call {\tt InitBasis} to reserve the memory for
+    the {\tt BVect} and {\tt BMatr} elements.
+ \endtab
+\code
+
+PROCEDURE InitBasis (B : Basis;  m : MScal;  Nor : NormType;  d : BDim);
+\endcode
+   \tab
+    Initializes the modulus and the norm for the basis {\tt B}.  
+    Reserves the memory for the {\tt BVect} and {\tt BMatr}
+    fields of {\tt B}, for indices 0 to $d$ if $d>0$.
+    Here, {\tt d} is the new value of {\tt ResDim}.
+    If {\tt d < B\^{}.ResDim}, then the memory already reserved which
+    is no longer needed is deallocated.
+    \endtab
+\code
+
+PROCEDURE DeleteBasis (B : Basis);
+\endcode
+   \tab  Does the same as {\tt InitBasis (B, B\^{}.m, B\^{}.Norm, 0)}, 
+    and then the  opposite of {\tt CreateBasis (B)}.
+%   Deallocates the memory allocated for {\tt V}, {\tt W}, {\tt VVSI} 
+%   and {\tt WWSI}, at a previous call to {\tt InitBasis}. 
+%   Must be called only if {\tt InitBasis} has been called previously.
+   \endtab
+\code
+
+PROCEDURE WriteBasis (B : Basis);
+\endcode
+  \tab  Writes content of {\tt B} in current output file.
+  \endtab
+\code
+
+PROCEDURE ReadBasis (VAR B : Basis);
+\endcode
+  \tab  Reads a basis from current input file.
+        The basis must have been written to the file by {\tt WriteBasis}.
+  \endtab
+\code
+
+PROCEDURE CopyBasis (B1, B2 : Basis);
+\endcode
+ \tab  Copies {\tt B1} into {\tt B2}.  \endtab
+\code
+
+PROCEDURE Permute (B : Basis;  i, j : BDim);
+\endcode
+   \tab Exchanges vectors i and j in the basis and its dual. \endtab
+\code
+
+PROCEDURE SortBasis (B : Basis;  d : BDim);
+\endcode
+   \tab  Sorts the basis vectors (with index from $d+1$ to {\tt B\^{}.Dim}) 
+   by increasing length.
+   The dual vectors are permuted accordingly.
+   Assumes that {\tt VVLR} and {\tt WWLR} 
+   (or {\tt VVSI} and {\tt WWSI}, if {\tt SISquares}) are up to date.
+%  Note: no longer updates {\tt VVLR} (or {\tt VVSI}). 
+ \endtab
+\code
+
+PROCEDURE Dualize (B : Basis);
+\endcode
+  \tab Exchanges {\tt V, VVLR, VVSI, EchVV} and {\tt W, WWLR, WWSI,
+       EchWW}.
+ \endtab
+\code
+
+PROCEDURE UpdateVVWW (B : Basis;  d : BDim);
+\endcode
+  \tab  Updates {\tt VVLR} and {\tt WWLR} (or {\tt VVSI} and {\tt WWSI}
+     if {\tt SISquares}) as the square Euclidean lengths of the vectors
+     in {\tt V} and {\tt W} (for vectors 
+     with index from $d+1$ to {\tt B\^{}.Dim}).
+ \endtab
+\code
+
+PROCEDURE EraseVVWW (B : Basis);
+\endcode
+  \tab
+    Sets the vectors {\tt VVLR} and {\tt WWLR} (or {\tt VVSI} and {\tt WWSI}
+    if {\tt SISquares}) to negative values. 
+\endtab
+\code
+
+PROCEDURE CheckDuality (B : Basis): BOOLEAN;
+\endcode
+  \tab
+   Check that {\tt Basis B} satisfies the duality relation
+   $V[i]\cdot W[j] = m\,\delta_{ij}$. If so, returns {\tt TRUE}, otherwise 
+   returns {\tt FALSE}.
+\endtab
+\code
+
+PROCEDURE BaseEquivalence (B1, B2 : Basis) : BOOLEAN;
+\endcode
+  \tab
+   Check that {\tt Basis B1} and {\tt B2} are equivalent.
+   If so, returns {\tt TRUE}, otherwise returns {\tt FALSE}.
+\endtab
+\code
+
+PROCEDURE RandomLattice (B : Basis;   m : BScal;   d : BDim);
+\endcode
+ \tab Constructs a {\em random\/} basis for an integral lattice,
+   chosen with the uniform distribution over the {\em finite\/} set
+   of all lattices whose fundamental volume is $m^{d-1}$ and which
+   contains $m \Z^d$ as a sublattice, for the specified values of $m$ and $d$.
+ \endtab
+\code
+
+END LATBASIS.
+\endcode

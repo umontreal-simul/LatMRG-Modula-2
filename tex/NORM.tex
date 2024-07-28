@@ -1,0 +1,162 @@
+\defmodule {NORM}
+
+This module provides tools to define normalization constants
+for the shortest vectors.
+
+\bigskip\hrule
+\code
+
+DEFINITION MODULE NORM;
+
+IMPORT BASISLR;
+FROM CONFIG IMPORT BDim, MDim;
+FROM MULT   IMPORT MScal;
+
+TYPE
+   CriterionType = (Spectral, SpectralP, SpectralL1, Beyer, BeyerSpectral,
+                    Palpha);
+\endcode
+ \tabb  Types of merit criteria for lattices.
+   {\tt Spectral} means that the criterion is based on the shortest
+   vector in the {\em dual\/} lattice.
+   In this case, one must specify which approximation is used for $\gamma_t$
+   (see {\tt GammaType} below).
+   {\tt SpectralP} is similar to {\tt Spectral}, except that
+    it is based on the shortest vector in the {\em primal\/} lattice.
+   {\tt SpectralL1} is similar to {\tt Spectral}, except that
+    the length of the (dual) vectors are measured with the $L_1$ norm,
+    minus 1.  The length of the shortest dual vector is then an upper
+    bound on the minimal number of hyperplanes that cover all the points
+    (\cite{rDIE75a} and \cite{rKNU97a}, Exercises 3.3.4-15 and 16).
+   {\tt Beyer} means that the criterion is the Beyer quotient $q_t$.
+   {\tt BeyerSpectral} means that both {\tt Beyer} and {\tt Spectral}
+   apply simultaneously.
+   {\tt Palpha} means that the criterion is $P_\alpha$.
+   In this case, one must specify a value of $\alpha$
+   and weights may also be used (see the module {\tt PALPHA}).   
+ \endtabb
+\code
+
+   NormType = (L1Norm, L2Norm, SupNorm);
+\endcode
+ \tabb  Type of norm used to measure the vector lengths.
+  For $V = (v_1,\dots,v_t)$, the $L_1$ norm is 
+  $\Vert V\Vert = |v_1|+\cdots+|v_t|$, the $L_2$ (or Euclidean) norm is
+  $\Vert V\Vert = (v_1^2+\cdots+v_t^2)^{1/2}$, and the sup norm is
+  $\Vert V\Vert = \max(|v_1|,\dots,|v_t|)$.
+ \endtabb
+\code
+
+   GammaType = (BestLat, Laminated, Minkowski, Rogers, MinkL1);
+\endcode
+ \tabb  Types of bound on $\gamma_t$ which can be used to normalize 
+   the length of the shortest vector.
+   The normalized value is the  
+   figure of merit used as a selection  criterion.
+   {\tt BestLat, Laminated, Minkowski, Rogers} correspond
+   respectively to the bounds $\gamma_t^{\rmL}$, $\gamma_t^{\rmB}$, 
+   $\gamma_t^{\rmZ}$, and $\gamma_t^{\rmR}$, for the Euclidean norm.
+   {\tt MinkL1} must be used for the $\cL_1$ norm and corresponds to 
+   $\gamma_t^{\rmM} = (t!)^{1/t}$.
+ \endtabb
+\code
+
+   Normaliz = POINTER TO InfoNormaliz;
+   InfoNormaliz = RECORD
+      Name  : ARRAY [0..31] OF CHAR;
+      Norm  : NormType;
+      GType : GammaType;
+      Beta  : LONGREAL;
+      Maxt  : BDim;
+      Gamma : BASISLR.BVect;
+      Cst   : BASISLR.BVect;
+      END;
+\endcode
+  \tabb Data structure used to store a vector of values 
+   that are used to normalize the lengths
+   $\ell_t$ of the shortest vectors.  
+   The array {\tt Gamma} contains values of $\tilde\gamma_t$ that are  
+   approximations of $\gamma_t$ which appears in the bounds given
+   in Section~1.
+   The normalized figure of merit will be $\ell_t/\bar\ell_t$, where
+  \eq             
+    \bar\ell_t = \cases {
+        \tilde\gamma_t m \beta^t       & if $t \le k$;\cr
+        \tilde\gamma_t m^{k/t} \beta^t & if $t > k$,\rule{0pt}{14pt}\cr }
+                                                    \eqlabel{eq:barellt}
+  \endeq
+   where $\beta$ is an additional multiplicative factor 
+   stored in the variable {\tt Beta} (often equal to 1).
+   The vector {\tt Cst} contains the values of $\bar\ell_t^2$ 
+   in case of the Euclidean norm, and $\bar\ell_t$ otherwise.
+
+   The structure must be created by the procedure {\tt CreateNormaliz},
+   initialized by {\tt InitNormaliz}, and deleted by
+   {\tt DeleteNormaliz}.
+   The field {\tt Name} is a character string that describes the type of 
+   $\tilde\gamma_t$.
+   {\tt Norm} is the type of norm that is used to measure
+   the vector lengths, {\tt GType} indicates the type of normalization 
+   constants $\tilde\gamma_t$, 
+   {\tt Beta} is the weighting factor used in (\ref{eq:barellt}),
+   {\tt Maxt} is the maximum index for which the arrays have been
+   initialized, i.e., the largest value of $t$ that can be considered.
+%  Old: With {\tt Critere2 = MinkL1}, {\tt Gamma[t]} contains $t!$.
+  \endtabb
+\code
+
+PROCEDURE CreateNormaliz (VAR G : Normaliz);
+\endcode
+ \tab  Creates the structure {\tt G} without initializing anything in it.
+ \endtab
+\code
+
+PROCEDURE InitNormaliz 
+   (   G  : Normaliz;
+    Name  : ARRAY OF CHAR;
+    Norm  : NormType;
+    GType : GammaType;
+    Beta  : LONGREAL;
+    Maxt  : BDim;
+       m  : MScal;
+       k  : MDim
+   );
+\endcode
+ \tab  Initializes the structure {\tt G} so that 
+   {\tt Gamma[t]} contains the 
+   approximation of $\gamma_t$ that corresponds to {\tt T},
+   for $1\le t\le {\tt Maxt}$. 
+   {\tt Cst[t]} will contain the value of $\bar\ell_t^2$ 
+   in case of the Euclidean norm ({\tt Norm = L2Norm}), 
+   and $\bar\ell_t$ otherwise,
+   where $\bar\ell_t$ is defined in (\ref{eq:barellt}),
+   $\tilde\gamma_t$ is determined by {\tt GType},  and
+   $\beta$ is the value of {\tt Beta}.
+
+   Normally, this procedure is called with $\beta = 1$.  
+   Taking $\beta < 1$ inflates the figure of merit by
+   $(1/\beta)^t$, thus weakening the requirements for large $t$ in a 
+   worst-case figure of merit such as (\ref{eq:M}).
+
+   The constant {\tt Maxt} cannot exceed 
+   the maximum value of $t$ for which the approximation of $\gamma_t$
+   has been pre-computed and is available (this depends on the type
+   {\tt GType} of $\tilde\gamma_t$).
+ \endtab
+\code
+
+PROCEDURE DeleteNormaliz (VAR G : Normaliz);
+\endcode
+ \tab  Deletes the structure {\tt G}.
+ \endtab
+\code
+
+PROCEDURE WriteNormaliz (G : Normaliz);
+\endcode
+ \tab  Writes the information contained in {\tt G}.
+ \endtab
+\code
+
+END NORM.
+\endcode
+

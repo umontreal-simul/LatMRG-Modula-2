@@ -1,0 +1,22 @@
+\defmodule {CONFIG}
+
+Here, we define constants, elementary types, and configuration variables 
+that are used throughout the package.
+
+\bigskip\hrule
+\code
+
+DEFINITION MODULE CONFIG;
+
+CONST
+   BMaxDim = 50;
+\endcode
+ \tabb  Maximum number of dimensions for a lattice.
+ \endtabb
+\code
+
+TYPE
+   BDim = [0..BMaxDim];
+
+END CONFIG.
+\endcode

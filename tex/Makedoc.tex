@@ -1,0 +1,134 @@
+\documentclass[11pt]{article}
+\usepackage[francais]{babel}
+
+\setlength{\textwidth}{150mm}
+\setlength{\textheight}{220mm}
+\setlength{\hoffset}{-15mm}
+\setlength{\voffset}{-20mm}
+
+
+\title{Le Makefile de {\tt latmrg/xds}}
+\author{Richard Simard}
+
+
+\begin{document}
+\maketitle
+Pour que le Makefile fonctionne correctement, il est n\'ecessaire que 
+les sous-r\'epertoires 
+{\tt dirlilr, dirsilr, dirsisi, sparc20 ou linux }
+existent, et que les programmes-ex\-em\-ples {\tt *.mod} 
+soient dans leur r\'epertoire respectif {\tt dirxxxx}.
+
+Les cibles possibles du Makefile sont:
+
+\begin{itemize}
+\item{\bf select} \\
+c'est le premier programme qui doit exister avant de pouvoir 
+reconstruire tous les modules et les programmes de {\tt latmrg}.
+Il permet de choisir un des contextes {\tt LILR} possibles:
+{\tt lilr, silr, sisi}. 
+
+\item{\bf modules} \\
+recompile tous les modules de base de {\tt latmrg}; ces fichiers
+sont \'enum\'er\'es dans le fichier {\tt Latmrg.prj}. Toutefois,
+les modules seront recompil\'es dans le contexte  courant de la variable
+d'environnement {\bf LILR}. Par exemple, si on veut 
+travailler uniquement dans le contexte {\bf sisi} (correspondant
+au choix {\tt select si si}), alors on appellera d'abord {\bf sisi}
+sur la ligne de commande du shell, ce qui nous placera dans ce contexte.
+Alors toutes les recompilations des modules de base se feront 
+dans ce contexte, et si on ne modifie qu'un seul fichier, seuls
+les modules en d\'ependant seront recompil\'es.
+
+\item{\bf modlilr} \\
+force la recompilation de tous les modules de base dans le
+contexte  {\tt lilr}.
+
+\item{\bf modsilr} \\
+force la recompilation de tous les modules de base dans le
+contexte {\tt silr}.
+
+\item{\bf modsisi} \\
+force la recompilation de tous les modules de base dans le
+contexte {\tt sisi}.
+
+\item{\bf proglilr} \\
+Recompile tous les programmes qui fonctionnent dans le contexte 
+{\tt lilr}, mais en utilisant les fichiers {\tt *.o, *.sym, *.h}
+de {\$XDSLIB}. %$
+ On peut aussi recompiler un seul programme en 
+le prenant comme cible, par exemple: {\tt make latl};
+ mais dans ce cas, les fichiers  {\tt *.o, *.sym, *.h} de
+{\tt latmrg/xds} seront utilis\'es, ce qui pr\'esume qu'on a
+choisi le contexte appropri\'e en appelant {\tt lilr}. 
+Ceci nous permet de tester {\bf nos propres fichiers  latmrg} 
+\`a l'aide des diff\'erents programmes.
+
+REMARQUE: si on veut compiler un programme utilisant les modules
+de  {\tt latmrg} sans passer par le Makefile, alors il faut d'abord choisir
+le contexte appropri\'e dans le shell. Par exemple,
+ pour compiler un programme {\tt prog.mod}
+ qui fonctionne dans le contexte de {\tt select si si}, il faudra
+appeler {\tt sisi} sur la ligne de commande du shell, puis 
+compiler avec \\
+\hspace*{10mm}  {\tt xm =m prog.mod}.
+
+
+\item{\bf progsilr} \\
+Comme {\bf proglilr}, mais dans le contexte {\tt silr}.
+
+\item{\bf progsisi} \\
+Comme {\bf proglilr}, mais dans le contexte {\tt sisi}.
+
+
+\item{\bf allprog} \\
+Recompile tous les programmes de tous les contextes en utilisant 
+les biblioth\`eques de \$XDSLIB. %%$
+
+\item{\bf alllilr} \\
+Recompile tous les modules de base, la biblioth\`eque, 
+ainsi que tous les programmes 
+qui fonctionnent dans le contexte {\tt lilr} en utilisant 
+la biblioth\`eque et les fichiers de \$XDSLIB. %%$ 
+
+\item{\bf allsilr} \\
+Recompile tous les modules de base, la biblioth\`eque, 
+ ainsi que tous les programmes 
+qui fonctionnent dans le contexte {\tt silr} en utilisant 
+la biblioth\`eque et les fichiers de \$XDSLIB. %%$
+
+\item{\bf allsisi} \\
+Recompile tous les modules de base, la biblioth\`eque, 
+ ainsi que tous les programmes 
+qui fonctionnent dans le contexte {\tt sisi} en utilisant 
+la biblioth\`eque et les fichiers de \$XDSLIB. %%$
+
+\item{\bf all}\\
+ Identique \`a {\bf force}
+
+\item{\bf force} \\
+Force la reconstruction et la recompilation de tous les fichiers, les
+modules, les biblioth\`eques et les programmes.
+
+\item{\bf lib} \\
+Reconstruit la biblioth\`eque liblat\$\{LILR\}99.a %$
+selon le contexte du shell.
+
+\item{\bf dellib} \\
+D\'etruit toutes les biblioth\`eques de {\tt latmrg99}.
+
+\item{\bf clean} \\
+\'Elimine les fichiers de sauvegarde.
+
+\item{\bf cleanprog} \\
+\'Elimine les programmes ex\'ecutables ainsi que les 
+fichiers de sauvegarde  de leur source.
+
+\item{\bf cleanall} \\
+\'Elimine les fichiers de sauvegarde, les ex\'ecutables et les 
+fichiers auxiliaires de {\LaTeX}.
+
+\end{itemize}
+
+\end{document}On doit s'assurer
+que les bons fichiers sont choisis.

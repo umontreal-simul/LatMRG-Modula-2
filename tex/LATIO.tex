@@ -1,0 +1,705 @@
+\defmodule {LATIO}
+
+This module contains several tools for input/output,
+for performing generator searches, for managing and storing lists
+of generators, and the like.
+It contains the actual implementations of the
+high-level ``seek'' and ``lat'' programs.
+The procedures here use most of the other 
+lower-level and intermediate-level modules.
+All the {\tt Read...} procedures read the data in the format
+explained in the documentation of the {\tt seekl} program.
+
+The searches for lists of (good or bad) generators are 
+performed by categories, as explained in
+the documentation of the {\tt seekl} program.
+The set of dimensions for which the lattice structure is examined
+is partitioned into a certain number of intervals (one or more),
+also called {\em categories\/}.
+We give bounds on the accepted values of the figure of merit
+for each category and, for any given category $c$,
+we consider only those generators that satisfy the bounds 
+for all the categories less or equal to $c$.
+Then we retain a list of generators with the best or worst figures of
+merit for each category.
+
+
+\bigskip\hrule
+\code
+
+DEFINITION MODULE LATIO;
+
+FROM SUPINT   IMPORT SuperInteger;
+FROM SUPFACT  IMPORT Factors;
+FROM CONFIG   IMPORT BDim, OutputType, MaxJ, MaxCat, Indexj, MaxNbGen;
+FROM MULT     IMPORT MScal, MVect;
+FROM NORM     IMPORT CriterionType; 
+FROM REDBAS   IMPORT VerifyType; 
+IMPORT BASISLR;
+
+
+TYPE
+   GenerType   = (MRG, MWC);
+\endcode
+ \tabb Type of generator that can be considered. \endtabb
+\code
+
+   CondType    = (NoCond, AppFact, MaxBits);
+\endcode
+ \tabb Type of condition on the multipliers. \endtabb
+\code
+
+   VerifType   = (VerifyAll2, VerifyRetained2, 
+                  VerifyAll3, VerifyRetained3, NoVerify);
+\endcode
+ \tabb Type of verification that can be performed on the results
+    (i.e., type of computational method). \endtabb
+\code
+
+   Poly        = POINTER TO InfoPoly;
+   InfoPoly    = RECORD
+      a        : MVect;
+      NextPoly : Poly
+      END;
+\endcode
+ \tabb  Elements to store a linked list of polynomials.  \endtabb
+\code
+
+   Resultats   = POINTER TO InfoRes;
+   InfoRes     = RECORD
+      RD2, RS2, RQ2 : BASISLR.BVect;
+      DimD2, DimQ2  : BDim
+      END;
+\endcode
+ \tabb  Type of record used as a field of the record type {\tt InfoGen},
+    to store detailed results for a given generator. 
+    It contains the {\em squared\/} values of the $d_t$, $S_t$, and $q_t$,
+    and the maximal dimensions {\tt DimD2} and {\tt DimQ2} 
+    for which $d_t$ and $q_t$, respectively, have been computed.
+ \endtabb
+\code
+
+   Generateur = POINTER TO InfoGen;
+   InfoGen    = RECORD
+      Maj      : ARRAY Indexj OF MVect; 
+      a        : MVect;
+      DimMerit : BDim; 
+      Merit    : LONGREAL;
+      Res      : Resultats;
+      NextGen  : Generateur
+      END;
+\endcode
+ \tabb  Type of record used to store a linked list of generators.
+   Used to store the generators that are kept in each category.
+   The coefficients $a_{j,i}$ of the components are in {\tt Maj}
+   whereas those of the combined generator are in {\tt a}.
+   {\tt DimMerit} is the dimension where the minimum is attained for
+   the figure of merit (for the given category) and {\tt Merit} gives
+   the value of this figure of merit.
+   {\tt Res} is a pointer to the more detailed results and
+   {\tt NextGen} is a pointer to the next generator in the list.
+ \endtabb
+\code
+
+   ToZone = POINTER TO Zone; 
+   Zone   = RECORD
+      No         : INTEGER; 
+      Binf, Bsup : SuperInteger;
+      p          : LONGREAL;
+      PetiteDiff : BOOLEAN;
+      BsupMsH    : SuperInteger;
+      Mq, MBsup  : MScal;
+      NextZone   : ToZone;
+      END;
+\endcode
+ \tabb  Type of record used to store the research zones.
+   {\tt No} is the number of the zone, which is in $\{0,1,2,3\}$.
+   {\tt Binf} and {\tt Bsup} are the lower and upper bounds
+   defining the zone.  
+   {\tt P} is the fraction of the acceptable
+   values of $a$ lying in this zone (this is used for the random searches).
+   {\tt PetiteDiff} is {\tt TRUE} iff {\tt Bsup - Binf $\le$ H} (or {\tt Hk}),
+   and when it is {\tt TRUE}, {\tt BsupMsH} is equal to 
+   {\tt Bsup ${}+1-{}$H} (or {\tt Hk}). This is also used for random searches.
+   The variables {\tt Mq} and {\tt MBsup} are used in {\tt ExamAllZones}.
+  \endtabb
+\code
+
+   ToRegion = POINTER TO Region;
+   Region   = RECORD
+      No         : INTEGER;
+      Binf, Bsup : MScal;
+      Mq         : MScal
+      END;
+\endcode
+ \tabb  Type of record used to store the regions that are to be searched.
+   {\tt No} is the zone number where this region is (in $\{0,1,2,3\}$).
+   {\tt Binf} and {\tt Bsup} are the lower and upper bounds
+   defining the region.  
+   The variable {\tt Mq} is  used in {\tt ExamRegion}.
+  \endtabb
+\code
+
+PROCEDURE TimeOver () : BOOLEAN;
+\endcode
+ \tab 
+   Returns {\tt TRUE} if and only if the cpu time limit has been reached.
+ \endtab
+\code
+
+PROCEDURE CreateGenerateur (VAR G : Generateur);
+\endcode
+ \tab 
+  Creates a record for a generator {\tt G} and initializes its fields.
+ \endtab
+\code
+
+PROCEDURE CreateZone (VAR Z : ToZone);
+\endcode
+ \tab 
+  Creates a record for a zone {\tt Z} and initializes its  fields.
+ \endtab
+\code
+
+PROCEDURE CreateRegion (VAR R : ToRegion);
+\endcode
+ \tab 
+  Creates a record for a region {\tt R} and initializes its  fields.
+ \endtab
+\code
+
+PROCEDURE LireFact (VAR L : Factors;   NomFch : ARRAY OF CHAR);
+\endcode
+ \tab
+  Reads a list of factors in the file {\tt NomFich} and places them
+  in the list {\tt L}.  Assumes that the factors in the file are
+  written according to the format used by {\tt Ecrirefact}.
+ \endtab
+\code
+
+PROCEDURE EcrireFact (L : Factors;   NomFch : ARRAY OF CHAR);
+\endcode
+ \tab
+  Writes the factors of the list {\tt L} to the file {\tt NomFich}.
+  It this file exists, it is rewritten.
+  The factors can be read back later by {\tt LireFact}.
+ \endtab
+\code
+
+PROCEDURE Readm (j : Indexj);
+\endcode
+ \tab
+  Reads the modulo $m_j$ for the component $j$.
+  Initializes some constants that depend on it.
+ \endtab
+\code
+
+PROCEDURE ReadOnea (aa : SuperInteger);
+\endcode
+ \tab
+  Reads one multiplier $a_{j,i}$ or one bound 
+  $b_{j,i}$ or $c_{j,i}$ in the format described in {\tt seekl}.
+ \endtab
+\code
+
+PROCEDURE ReadReadGen;
+\endcode
+ \tab
+  Reads a boolean indicating if the generators to be tested should be
+  taken from a `{\tt .gen}' file, and if true, \
+  also reads the name of the file, without the {\tt .gen} extension.
+ \endtab
+\code
+
+PROCEDURE ReadTypeGen (j : Indexj);
+\endcode
+ \tab
+  Reads the type of generator to be considered, MRG or MWC,
+  for component $j$.
+ \endtab
+\code
+
+PROCEDURE ReadOrder (j : Indexj);
+\endcode
+ \tab
+  Reads the order $k_j$ of the recurrence  for component $j$.
+ \endtab
+\code
+
+PROCEDURE ReadPerMax (j : Indexj);
+\endcode
+ \tab
+  Reads a boolean indicating if component $j$ should have 
+  maximal period.  The muliplier $m_j$ must have been read in
+  the `3 numbers' format by {\tt readmj}, otherwise this boolean
+  is reset to {\tt FALSE}.
+ \endtab
+\code
+
+PROCEDURE ReadImplemCond (j : Indexj);
+\endcode
+ \tab
+  Reads the condition that we impose on the coefficients $a_{j,i}$
+  for the component $j$.  
+ \endtab
+\code
+
+PROCEDURE ReadFactmr (j : Indexj);
+\endcode
+ \tab
+  Reads what to do about the factorizations of $m_j-1$ and 
+  $r_j = (m_j^{k_j}-1)/(m_j-1)$,  for the component $j$.
+ \endtab
+\code
+
+PROCEDURE Reada (j : Indexj);
+\endcode
+ \tab
+  Reads the $k_j$ multipliers $a_{j,1},\dots,a_{j,k_j}$ for component $j$.
+ \endtab
+\code
+
+PROCEDURE Readbc (j : Indexj);
+\endcode
+ \tab
+  Reads the $2k_j$ bounds $b_{j,1},c_{j,1}\dots,b_{j,k_j},c_{j,k_j}$ 
+  on the multipliers for component $j$.
+ \endtab
+\code
+
+PROCEDURE ReadSearchMethod (j : Indexj);
+\endcode
+ \tab
+  Reads the method of search, exhaustive or random, for the polynomials
+  for component $j$.  If the method is {\tt Random}, the it reads also
+  the number of regions and their sizes.
+ \endtab
+\code
+
+PROCEDURE ReadMRGComponent (j : Indexj);
+\endcode
+ \tab
+  Reads all the parameters related to the component $j$,
+  by calling the appropriate `{\tt Read...}' procedures above.
+  Also creates the required data structures for this component.
+ \endtab
+\code
+
+PROCEDURE ReadMinMaxDim;
+\endcode
+ \tab
+  Reads the minimal and maximal numbers of dimensions in which the
+  test is to be applied, the number of categories,
+  and the boundaries of these categories.
+  The format is slightly different for the `seek' and `lat'
+  programs.
+ \endtab
+\code
+
+PROCEDURE ReadMinMaxMerit;
+\endcode
+ \tab
+  Reads the minimum and maximum acceptable values for the figure 
+  of merit for each category of dimensions.
+ \endtab
+\code
+
+PROCEDURE ReadNbGen;
+\endcode
+ \tab
+  Reads the number of generators that we want to retain in each
+  category.
+ \endtab
+\code
+
+PROCEDURE ReadCriterion;
+\endcode
+ \tab
+  Reads the selection criterion (figure of merit).
+ \endtab
+\code
+
+PROCEDURE ReadLatInfo;
+\endcode
+ \tab
+  Reads what lattice information we want to be printed in the results.
+ \endtab
+\code
+
+PROCEDURE ReadLatType;
+\endcode
+ \tab
+  Reads which type of lattice we want to analyze:
+  That generated by the recurrent states only, or that generated by
+  a single orbit, or that generated by the longest cycle of a 
+  generator with prime power modulus, or the full lattice generated
+  by the union of all the orbits.
+  In the case of {\tt Orbit}, this procedure also reads the initial
+  state and initializes some additional data structures.
+ \endtab
+\code
+
+PROCEDURE ReadLaIndices;
+\endcode
+ \tab
+  Reads the indices (lacunary or successive) that are to be considered.
+ \endtab
+\code
+
+PROCEDURE ReadVerifyBB;
+\endcode
+ \tab
+  Reads the verification level that we want to use.
+ \endtab
+\code
+
+PROCEDURE ReadMaxNodesBB;
+\endcode
+ \tab
+  Reads the maximum number of nodes that will be allowed in
+  the branch-and-bound tree.  When that number is exceeded,
+  the branch-and-bound procedure will stop.
+ \endtab
+\code
+
+PROCEDURE ReadTimeLimit;
+\endcode
+ \tab
+  Reads the cpu time limit that is allowed for a search.
+  When that limit is exceeded, the search procedure stops
+  and reports what it has found so far.
+ \endtab
+\code
+
+PROCEDURE ReadSeeds;
+\endcode
+ \tab
+  Reads the seeds that are used for the random number generator
+  of SENTIERS.  This generator is used for the random searches.
+ \endtab
+\code
+
+PROCEDURE ReadResultForm;
+\endcode
+ \tab
+  Reads the form of the output (on the terminal, in a {\tt .gen} file,
+  in a {\tt .res} file, in a {\tt .tex} file).
+ \endtab
+\code
+
+PROCEDURE Computem;
+\endcode
+ \tab  Computes the order and the modulus $m$ for the 
+   combined generator, given those of the components.
+   Computes also the period lengths of the components and of
+   the combination.
+ \endtab
+\code
+
+PROCEDURE Computea;
+\endcode
+ \tab 
+   Computes the vector of multipliers $a$ for the combined generators,
+   given the parameters of the components.
+   Assumes that the moduli of the components are all prime.
+   Initializes the vectors {\tt Maj} and {\tt a}. 
+ \endtab
+\code
+
+PROCEDURE SaisieDonnees;
+\endcode
+ \tab
+  Calls the different low-level procedures to read the data
+  from the data file, in the format appropriate for the programs
+  {\tt latl} and {\tt seekl}.
+  Also creates some of the data structures (e.g., {\tt SuperInteger}'s)
+  that are required.
+ \endtab
+\code
+
+PROCEDURE ReadGenFile;
+\endcode
+ \tab
+  Reads a set of generators from the file `{\tt xxx.gen}',
+  assuming that the data has been read from `{\tt xxx.dat}'. 
+ \endtab
+\code
+
+PROCEDURE PerMaxPowPrime (j : Indexj) : BOOLEAN;
+\endcode
+ \tab
+   Assumes that $m_j$ is a power of a prime $p$, that $k_j = 1$, 
+   and that the recurrence is homogeneous.   
+   Returns {\tt TRUE} iff the maximal period conditions are 
+   satisfied for that case for component $j$.
+ \endtab
+\code
+
+PROCEDURE Reducemj (VAR a : MVect);
+\endcode
+ \tab
+  Reduces $m_j$ and reinitializes the module {\tt MRG} accordingly
+  in the case where the modulus is a power of a prime and where
+  {\tt LatType = PrimePower}.  Called by {\tt testGen}.
+ \endtab
+\code
+
+PROCEDURE InitZones (j, i : INTEGER);
+\endcode
+ \tab
+  Initializes the research zones for the multiplier $a_i$ of the
+  component $j$.
+  In the case of a random search, this procedure also creates the
+  region for $(j,i)$.    Called by {\tt SetupGenSeek}.
+ \endtab
+\code
+
+PROCEDURE ChoisirBornes (j : Indexj);
+\endcode
+  \tab  This procedure is called by {\tt SeekGen} in the case of a
+    random search.  It chooses a region at random and 
+    initializes its boundaries.  This region will then be searched
+    completely.  
+  \endtab
+\code
+
+PROCEDURE TestGen
+   ( VAR a    : MVect;
+     T        : CriterionType;
+     VerifyBB : VerifyType;
+     Out      : OutputType
+   );
+\endcode
+ \tab
+   Tests the (combined) generator with multiplier (vector) {\tt a}.
+ \endtab
+\code
+
+PROCEDURE ConserverGen (C : INTEGER;  tMerit2 : BDim);
+\endcode
+ \tab
+   Inserts the most recently tested generator into the list
+   for the categoty {\tt Cat}.
+   The value {\tt tMerit2} indicates the dimension where the
+   worst-case is attained for the figure of merit.
+   This procedure is called by {\tt VerifyCategories}.
+ \endtab
+\code
+
+PROCEDURE VerifyCategories (VAR Me2 : BASISLR.BVect);
+\endcode
+ \tab
+  Verifies if the most recently tested generator can be included
+  in any of the lists corresponding to the different categories.
+  If so, includes it in the appropriate lists. 
+  The vector {\tt Me2} is either {\tt Q2} or {\tt S2}, depending
+  on the figure of merit that is used.
+ \endtab
+\code
+
+PROCEDURE ExamAllZones (j, i : INTEGER);
+\endcode
+ \tab
+  This procedure is used in the ``exhaustive search'' case. 
+  When $J > 1$, it collects primitive polynomials for the given $j$.
+  When $J = 1$, it tests all generators in the region.
+  The initial call should be with $i$ equal to the degree of the
+  polynomials for component $j$.
+  Then, the procedure calls itself recursively for smaller $i$.
+ \endtab
+\code
+
+PROCEDURE ExamRegion (j, i : INTEGER);
+\endcode
+ \tab
+  Similar to {\tt ExamAllZones}, but used for the ``Random search'' case.
+ \endtab
+\code
+
+PROCEDURE ExamCombPoly (jj : Indexj);
+\endcode
+ \tab
+  Used only when $J > 1$.  Examines all combinations of the primitive
+  polynomials found by {\tt ExamRegion} or {\tt ExamAllZones}.
+ \endtab 
+\code
+
+PROCEDURE ExamCurrenta;
+\endcode
+ \tab
+  Tests the generator that corresponds to the current value of the
+  multiplier (vector) {\tt a}, and adds it to the list(s) if it is competitive.
+  Called only by {\tt TestGenFromFile}.
+ \endtab
+\code
+
+PROCEDURE TestGenFromFile;
+\endcode
+ \tab
+  Examines all the generators from a {\tt .gen} file,
+  which is assumed to be the current input file.
+ \endtab
+\code
+
+PROCEDURE CalculNbreGen (j : Indexj);
+\endcode
+ \tab
+  Computes the total number of simple generators (i.e., polynomials)
+  examined, for the component {\tt j}, and puts the result in
+  {\tt TotGen [j]}.
+ \endtab
+\code
+
+PROCEDURE CalculerResteInfo;
+\endcode
+ \tab 
+  After the search has been completed, computes all the remaining required
+  information on the retained generators.
+  Computes the $d_t$ or the $q_t$ when required and not already done.
+  Redo the computations with error bounds if requested.
+ \endtab
+\code
+
+PROCEDURE PrintErrBounds (T : INTEGER);
+\endcode
+ \tab
+  Computes and prints the bounds on the Euclidean distances between
+  the points produced by a L'Ecuyer-style combined MRG and the 
+  corresponding points produced by the associated MRG,
+  in dimensions 2 to {\tt T}.  This is used only when $J > 1$.
+ \endtab
+\code
+
+PROCEDURE EcrisGen (G : Generateur;    Cat : INTEGER);
+\endcode
+ \tab
+  Writes the parameters and the results relative to a retained 
+  generator {\tt G}, in category {\tt Cat}.
+  Called by {\tt WriteSeekRes}.
+ \endtab
+\code
+
+PROCEDURE WriteLatHead;
+\endcode
+ \tab
+  Writes a heading for the results of a lattice test.
+  Called by {\tt LatGen}.
+ \endtab
+\code
+
+PROCEDURE WriteLatHeadTex;
+\endcode
+ \tab
+  Writes a heading for the results of a lattice test in \LaTeX\ form.
+  Called by {\tt LatGen}.
+ \endtab
+\code
+
+PROCEDURE WriteDataComponent (j : Indexj);
+\endcode
+ \tab
+  Write the statistical data relative to component {\tt j}.
+ \endtab
+\code
+
+PROCEDURE WriteStatComponent (j : Indexj);
+\endcode
+ \tab
+   Writes the statistics on the searches for primitive 
+   (or examined) polynomials for the component {\tt j}.
+   Called by {\tt WriteSeekRes}.
+ \endtab
+\code
+
+PROCEDURE WriteTabBest (l : LONGINT;  G : Generateur);
+\endcode
+ \tab
+  Prints a one-line summary of the figures of merit in each interval,
+  for best generator retained in category (i.e., interval) number {\tt l}.
+ \endtab
+\code
+
+PROCEDURE WriteSeekHead;
+\endcode
+ \tab
+  Writes, in the current output file, the heading and the data 
+  for a search by the {\tt SeekGen} procedure.
+  Writes also the factorizations in the files if this was requested.
+ \endtab
+\code 
+
+PROCEDURE WriteSeekRes;
+\endcode
+ \tab
+   Writes the results of a search in the current output file,
+   then closes it.
+ \endtab
+\code
+
+PROCEDURE WriteSeekGen;
+\endcode
+ \tab
+   Writes in a {\tt .gen} file the generators found in a search.
+   If the data was read in {\tt xxx.dat}, then this procedure
+   will open the file {\tt xxx.gen} and write in it.
+ \endtab
+\code
+
+PROCEDURE SetupSeekGen;
+\endcode
+ \tab
+  Called by {\tt SetUp}.
+  Performs initializations for the searches of generators.
+  Creates the ordered lists to store the `best' {\tt NbGen [C]}
+  generators in each category {\tt C}.
+  Initializes the bounds on the figures of merit in each dimension.
+  Initializes the polynomial lists (to empty) and the search zones.
+ \endtab
+\code
+
+PROCEDURE Setup;
+\endcode
+ \tab
+  Obtains and opens data file, reads data and performs initializations.
+  Initializes {\tt REDBAS} and {\tt MRG}.
+  This procedure is called by {\tt SeekGen} and {\tt LatGen}.
+ \endtab
+\code
+
+PROCEDURE LatGen;
+\endcode
+ \tab  Applies the required tests 
+   (for ``lat'' programs) and prints results.
+ \endtab
+\code
+
+PROCEDURE SeekGen;
+\endcode
+ \tab  Performs a seek for ``good'' generators 
+   (implements ``seek'' programs).
+ \endtab
+\code
+
+PROCEDURE CalcLaIndicesStreams (s, w : LONGINT);
+\endcode
+ \tab Calculates lacunary indices by groups of $s$ spaced by $2^w$
+ \endtab 
+\code
+
+PROCEDURE LatGenStreams;
+\endcode
+ \tab  Applies the test for different values of $w$ where a big generator
+  is divided into smaller ones, which are separated by $2^w$. 
+ \endtab 
+\code 
+
+END LATIO.
+\endcode
+
+
+
+
+
+
+
+

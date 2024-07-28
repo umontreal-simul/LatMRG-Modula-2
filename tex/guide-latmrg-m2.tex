@@ -1,0 +1,183 @@
+%  Guide de l'usager du logiciel LatMRG
+%
+\documentstyle[twoside,11pt,myarticle]{article}
+% \usepackage{url}
+% \input url.sty
+\def\url#1{{\tt #1}} 
+
+% \includeonly {TESTCONF}
+\mytwoheads
+%%\dateheadtrue
+
+\def\ray#1    {\fbox {\footnote {\ }}\ \footnotetext { From Raymond: #1}}
+\def\pierre#1 {\fbox {\footnote {\ }}\ \footnotetext { From Pierre: #1}}
+\def\hray#1 {}
+\def\hpierre#1 {}
+% Changing  \ray  to  \hray  will temporarily hide the comment.
+% Comments can then be "hiddenly" saved for further reference.
+
+\def\title#1    {\vfill\begin {center} \Large\rm #1 \end {center} \vfill}
+\def\author#1   {\begin {center} \large\rm #1 \end {center} \medskip}
+\def\abstract   {\section* {ABSTRACT} \null }
+\def\keywords#1 {\noindent #1 \vfill\vfill}
+\def\thanks     {\section* {Acknowledgements}}
+%\def\refer      {\begin {thebibliography}{99}
+%\def\endrefer   {\end {thebibliography}}
+\def\newblock   {\hskip .11em plus .33em minus .07em} 
+
+\def\?{\discretionary{}{}{}}  % Same as \- but does not print the - sign
+                              % (useful to hyphenate in math mode).
+\def\To {\Rightarrow}
+\def\eqdef {\buildrel \rm def \over =}    % Egal par definition.
+\def\tod {\buildrel \rm d \over \To}
+\def\iid {{\rm i.i.d.}}
+\def\mod{{\rm\ mod\ }}        % Modulo.
+\def\MOD{{\rm\ MOD\ }}
+\def\div{{\rm\ div\ }}        % Division entiere.
+\def\DIV{{\rm\ DIV\ }}
+\def\var{{\rm\ var }}        % Variance.
+\def\Var{{\rm\ Var }}
+\def\arg{{\rm\ arg }}          % Argument.
+\def\dim{{\rm dim }}
+\def\cA {{\cal A}}
+\def\cB {{\cal B}}
+\def\cH {{\cal H}}
+\def\cI {{\cal I}}
+\def\cJ {{\cal J}}
+\def\cF {{\cal F}}
+\def\cL {{\cal L}}
+\def\cN {{\cal N}}
+\def\cP {{\cal P}}
+\def\Cov{{\rm\ Cov }}
+\def\Is {[0,1)^s}
+\def\fFour{\hat{f}({\bf h})}
+\def\hdual{{\bf 0} \neq{\bf h} \in L_s^{*} }
+
+\def\o   {{(o)}}
+\def\a   {{*}}
+\def\ba  {{\bf a}}
+\def\bA  {{\bf A}}
+\def\bb  {{\bf b}}
+\def\bB  {{\bf B}}
+\def\bc  {{\bf c}}
+\def\be  {{\bf e}}
+\def\bI  {{\bf I}}
+\def\bh  {{\bf h}}
+\def\bk  {{\bf k}}
+\def\bm  {{\bf m}}
+\def\bM  {{\bf M}}
+\def\bT  {{\bf T}}
+\def\bu  {{\bf u}}
+\def\bU  {{\bf U}}
+\def\bv  {{\bf v}}
+\def\bV  {{\bf V}}
+\def\bw  {{\bf w}}
+\def\bW  {{\bf W}}
+\def\bx  {{\bf x}}
+\def\bX  {{\bf X}}
+\def\by  {{\bf y}}
+\def\bz  {{\bf z}}
+
+\def\rmB  {{\rm B}}
+\def\rmL  {{\rm L}}
+\def\rmM  {{\rm M}}
+\def\rmP  {{\rm P}}
+\def\rmR  {{\rm R}}
+\def\rmZ  {{\rm Z}}
+
+\def\tbA {\tilde{\bf A}}
+\def\tbs {\tilde{\bf s}}
+\def\tbu {\tilde{\bf u}}
+\def\bzero {{\bf 0}}
+\def\es{\hspace{0.5mm}e\hspace{0.6mm}}
+\def\card {\mbox{\rm card}}
+
+\def\Re{{\rm I\kern-0.2em R}} % Ensemble des nombres reels.
+\def\R{\Re}
+\def\N{{\rm I\kern-0.2em N}}  % Ensemble des nombres naturels.
+\def\F{{\rm I\kern-0.2em F}}  % Ensemble des nombres naturels.
+\def\Z{{\sf Z\kern-0.4em Z}}  % Ensemble des nombres entiers.
+\def\B{{\cal B}}
+\def\square{\ $\Box$}
+\def\eqdef {\buildrel \rm def \over =}    % Egal par definition.
+\def\<{$\langle$}        %  Signe <
+\def\>{$\rangle$}        %  Signe >
+\def\q{$\kern1.4em$}     % Space for indentation in slides and programs.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin {document}
+
+\include {titre}
+\pagenumbering{roman}
+\tableofcontents
+%\include{avantpro}
+\newpage
+%
+%                   Background, overview, examples, guidelines.
+\pagenumbering{arabic}
+\input sec1.tex
+\input sec2.tex
+\input sec3.tex
+%
+%                   Programs in executable form.
+\appendix
+\include {appena}
+\include {maxper}
+\include {findmk}
+\include {latl}
+\include {seekl}
+\include {lats}  % This includes  lats, latsr, seeks, seeksr, streams.
+%\input streams
+\include {menumrg}
+%\include {palpha}  % Now a special case of latl and lats.
+%\include {coeff}   % Now a special case of seekl and seeks.
+%
+%                   Intermediate-level modules.
+\include {appenb}
+\include {LATMRG}
+\include {PALPHA}
+\include {LATIO}
+\include {MRG}
+\include {TESTLAT}
+\include {REDBAS}
+\include {REDBAS2}
+\include {REDBAS3}
+\include {LATBASIS}
+\include {PRIM}
+%
+%                   Lower-level modules.
+\include {appenc}
+\include {NORM}
+\input CONFIG.tex   \vfill
+\input MULT.tex     \vfill
+\input BASIS.tex    \vfill
+\input CONVERT.tex  \vfill
+\include {MULTLI}
+\include {MULTSI}
+\include {BASISLR}
+\include {BASISSI}
+\include {LILR}
+\include {LISI}
+\include {SILR}
+\include {SISI}
+\include {select}
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\thanks
+
+This work has been supported by NSERC-Canada grant \# ODGP0110050
+and FCAR-Qu\'ebec grant \# 93ER1654 to the first author.
+Fran\c cois Blouin, Anna Bragina, Ajmal Chaumun, Marco Jacques, 
+Fran\c cois Paradis, and Jos\'ee Turgeon 
+have participated in the implementation of this software package,
+since 1988.
+We thank L. Afflerbach and H. Grothe for helpful discussions 
+in the early stage of the development, in 1989.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\bibliography {random,simul,math,ift,vrt}
+\bibliographystyle {plain}
+
+\end {document}

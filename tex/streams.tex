@@ -1,0 +1,31 @@
+\defmodule {streams}
+
+This program takes as input a data file in the same format as
+{\tt lats}, with an additional line at the end that contains 
+3 positive integers $w_{\min}$, $w_{\max}$, and $s_{\max}$.
+The program ignores the values of {\em LaGroupSizes\/} and 
+{\em Spacings\/} in the data file.
+It partitions the period length of the given generator
+in {\em streams\/} of length $2^w$, for $w = w_{\min},\dots,w_{\max}$.
+For each $w$ and for $s = 1,\dots,s_{\max}$, the program analyzes the
+lattice structure of the vectors of the form 
+$(u_{i+1}, \dots, u_{i+s}, u_{i+w+1},\dots, u_{i+w+s}, u_{i+2w+1},\dots,
+u_{i+2w+s}, \dots)$, formed by groups of $s$ successive values,
+taken $w$ values apart.
+The analysis is performed in the same way as in {\tt lats}.
+For each $w$, the program also prints the worst value of the figure 
+of merit over all values of $s$.
+These results can be used to select a specific value of $w$
+for splitting the generator's cycle into streams.
+All the computations are done using the {\tt SI SI} representation.
+
+
+
+
+
+
+
+
+
+
+

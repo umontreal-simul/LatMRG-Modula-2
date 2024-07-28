@@ -1,0 +1,56 @@
+\defmodule{LILR}
+
+Procedures to convert between {\tt LONGINT} (multipliers) and
+{\tt LONGREAL} (elements of basis vectors).
+This is one of the four versions of the module {\tt CONVERT}.
+The other versions are {\tt LISI}, {\tt SILR}, {\tt SISI}.
+Which one is used depends on the current representation, as selected by
+the command {\tt select}.
+
+\bigskip\hrule
+\code
+
+DEFINITION MODULE LILR;
+
+FROM MULTLI  IMPORT MScal;             (* LONGINT.                        *)
+FROM BASISLR IMPORT BScal;             (* LONGREAL.                       *)
+FROM SUPINT  IMPORT SuperInteger;
+
+PROCEDURE MScalToBScal (S : MScal;  VAR R : BScal);
+\endcode
+  \tab  Converts {\tt S} to {\tt R}
+   (from {\tt LONGINT} to {\tt LONGREAL}).\endtab
+\code
+
+PROCEDURE BScalToMScal (S : BScal;  VAR R : MScal);
+\endcode
+  \tab  Converts {\tt S} to {\tt R}
+   (from {\tt LONGREAL} to {\tt LONGINT}).\endtab
+\code
+
+PROCEDURE SupToBScal (S : SuperInteger;  VAR R : BScal);
+\endcode
+  \tab Converts {\tt S} to {\tt R}
+   (from SuperInteger to {\tt LONGREAL}).\endtab
+\code
+
+PROCEDURE SupToMScal (S : SuperInteger;  VAR R : MScal);
+\endcode
+  \tab Converts {\tt S} to {\tt R}
+   (from SuperInteger to {\tt LONGINT}).\endtab
+\code
+
+PROCEDURE BScalToSup (S : BScal;  R : SuperInteger);
+\endcode
+  \tab Converts {\tt S} to {\tt R}
+   (from {\tt LONGREAL} to SuperInteger).\endtab
+\code
+
+PROCEDURE MScalToSup (S : MScal;  R : SuperInteger);
+\endcode
+  \tab Converts {\tt S} to {\tt R}
+   (from {\tt LONGINT} to SuperInteger).\endtab
+\code
+
+END LILR.
+\endcode

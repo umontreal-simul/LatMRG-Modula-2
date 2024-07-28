@@ -1,0 +1,107 @@
+\defmodule {CONFIG}
+
+Here, we define constants, elementary types, and configuration variables 
+that are used throughout the package.
+
+\bigskip\hrule
+\code
+
+DEFINITION MODULE CONFIG;
+
+CONST
+   MMaxDim = 16;
+\endcode
+  \tabb  Maximum number of dimensions of arrays and matrices 
+    in module {\tt MULT}.
+    Maximal order of a multiple recursive generator.
+  \endtabb
+\code
+
+   BMaxDim = 48;
+\endcode
+ \tabb  Maximum number of dimensions for a lattice basis (module {\tt BASIS}).
+ \endtabb
+\code
+
+   MaxCoord = 64;
+\endcode
+  \tabb  Maximum total number of coordinates that can be considered when
+    constructing the generating vectors in module {\tt TESTLAT}.
+  \endtabb
+\code
+
+   MaxDimProj = 8;
+\endcode
+  \tabb  Maximum number of dimensions for the projections over 
+    non-successive indices, 
+    that can be considered by the module {\tt TESTLAT}.
+  \endtabb
+\code
+
+   MaxCat = 5;
+\endcode
+  \tabb    Maximum number of categories into which the
+   set of dimensions can be partitioned.
+  \endtabb
+\code
+
+   MaxNbGen = 256;
+\endcode
+ \tabb Maximum number of generators that can be stored in a list
+  (in module {\tt SEARCH}). \endtabb
+\code
+
+   MaxJ = 5;
+\endcode
+ \tabb Maximum number of components $J$ for a combined generator. \endtabb
+\code
+
+TYPE
+   MDim = [0..MMaxDim];
+\endcode
+ \tabb  A dimension or coordinate in module {\tt MULT}.
+ \endtabb
+\code
+
+   BDim = [0..BMaxDim];
+\endcode
+ \tabb  A dimension or coordinate for a lattice basis.
+ \endtabb
+\code
+
+   MCoord = [0..MaxCoord];
+\endcode
+ \tabb  A coordinate number that can be considered when
+    constructing the generating vectors, and for the projections.
+ \endtabb
+\code
+
+   DimProj = [0..MaxDimProj];
+\endcode
+ \tabb  Dimension of a projection.
+ \endtabb
+\code
+
+   Categ = [0..MaxCat];
+\endcode
+  \tabb  A category of generators.
+ \endtabb
+\code
+
+   Indexj = [1..MaxJ];
+\endcode
+ \tabb  Index of a component $j$ of a combined generator.  \endtabb
+\code
+
+   OutputType = (None, CurOut, CurOutTex);
+\endcode
+ \tabb  Kind of output to be produced.
+  {\tt None} means that nothing is written to the current output.
+  {\tt CurOut} and {\tt CurOutTex} mean that the results will be
+  written to the current default output. The difference is that for the
+  latter, they are written in \LaTeX\ format.
+ \endtabb
+\code
+
+END CONFIG.
+\endcode

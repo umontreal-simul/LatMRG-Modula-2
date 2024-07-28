@@ -1,0 +1,30 @@
+\defmodule {findmk}
+
+This program is an interface to the module {\tt PRIM}.
+It searches and prints the list of all prime integers $m$ such
+that $2^e+ c_1 \le m\le 2^e + c_2$ and $r = (m^k-1)/(m-1)$ is prime.
+We may also request that $(m-1)/2$ be also prime, by setting
+the boolean variable {\em Safe\/} to {\tt TRUE}.
+
+The program reads the data and calls the procedure {\tt FindPrimesmr}
+in the module {\tt PRIM}, with the corresponding parameters.
+The data for {\tt findmk} must be placed in a file with extension
+``{\tt .dat}'', in the format of Figure~\ref{findmk.dat}.
+To run the program, type ``{\tt findmk \em\<file\>}'', 
+where {\em\<file\>} is the name of the data file, without extension.
+The results will be written in {\em\<file\>}{\tt .res}.
+
+%%  DATA FILE  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\setbox1=\vbox {\hsize=12.0cm \setverbatim\it\baselineskip=13pt
+
+           $k$
+           $e$
+           $c_1$
+           $c_2$
+           Safe
+
+}
+\begin{figure}[h] \centerline {\boxit{\box1}}
+\caption { Data file format for {\tt findmk}. }   \label {findmk.dat}
+\end{figure}
+

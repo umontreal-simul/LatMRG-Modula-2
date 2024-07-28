@@ -1,0 +1,75 @@
+\defmodule {latl}
+
+This program applies the spectral and/or lattice test(s) to a given
+generator.  It uses the {\tt LONGINT} representation for the multipliers
+and modulus (module {\tt MULTLI}) and the {\tt LONGREAL} representation
+for the bases (module {\tt BASISLR}).
+The generator analyzed can be a combined generator with $J$ components,
+and expressed that way in the data file.
+\iffalse  %%%%%%
+If $J=1$ and $m$ is a power of two expressed as
+$(x\ y\ z) = (2\ y\ 0)$ in the data file,
+then the lattice associated to the multiplicative LCG with power
+of two modulus, as described in \cite{FIS90}, is analyzed.
+Otherwise, the lattice analyzed is the smallest one that contains all
+the points, for all possible starting values (i.e. the union of all subcycles,
+when there are subcycles).
+\fi  %%%%%%
+To run the program, type ``{\tt latl \<\em file\>}'', where \<{\em file}\> is
+the name of the data file, without extension.
+
+The data must be in a file with extension
+``{\tt .dat}'', according to the format of Figure~\ref{lat.dat}.
+The data fields have the same meaning as for {\tt seekl},
+except that several fields have been removed, 
+$a_i$ replaces $b_i$ and $c_i$,
+there is a single category for the dimensions, 
+and the options for {\em LatticeInfo} and {\em ResultForm\/} are different.
+\begin {description}
+\item [$(a_1,\ldots,a_k)$ :] is the vector of (integer) multipliers.
+  They can be given in format (a) or (b) described in {\tt seekl}.
+\item [{\em LatticeInfo} ~\<{\em Norm\/}\> :]
+  If the value of {\em LatticeInfo} is {\tt Spectral} 
+  or {\tt BeyerSpectral} or {\tt SpectralP},
+  then the field {\em Norm\/} must appear.
+  It indicates which type of normalization is used
+  in the definition of $S_t$.
+  The allowed values are {\tt (BestLat, Laminated, Rogers, Minkowski)}.
+\item [{\em ResultForm} :]
+  Selects in which form the results will be given.
+  The possible values are {\tt (Terminal, RES, TEX)}.
+  Lowercases are also allowed.
+  \begin {description}
+   \item [{\tt Terminal}] indicates that the results will be given on the
+     terminal screen.
+   \item [{\tt RES}] says that the results will be in a file with the same
+     name as the data file, but with extension ``{\tt .res}''.
+   \item [{\tt TEX}] asks the program to produce a file intended for
+     \LaTeX, with extension ``{\tt .tex}''.
+  \end {description}
+\end {description}
+
+%%  DATA FILE  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\setbox0=\vbox {\hsize=12.0cm \it \begin {tabular}{l}
+           ReadGenFile ~$[$\<file0\>$]$ \\
+           $J$ \\
+           $\left.\begin {array}{l}
+           \mbox {TypeGen} \\
+           m \\
+           k \\
+           a_1 \\
+           \vdots \\
+           a_k \\
+           \end {array} \ \ \ \right\} \mbox { (Repeat $J$ times) }$ \\
+           Dim$(0)$ ~Dim$(1)$ \\
+           LatticeInfo  ~\<{\em Norm\/}\> \\
+           LatticeType \\
+           LaGroupSizes ~Spacing\\
+           VerifyBB \\
+           MaxNodesBB \\
+           ResultForm \\
+\end {tabular}
+}
+\begin{figure}[htb] \centerline {\boxit{\box0}}
+\caption { Data file format for latl. }  \label {lat.dat}
+\end{figure}

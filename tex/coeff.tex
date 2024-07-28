@@ -1,0 +1,35 @@
+\defmodule{coeff}
+
+\baselineskip=14pt
+Ce programme permet de trouver des bons coefficients pour un
+g\'en\'erateur dont on a donn\'e le modulo et le type. Cette
+recherche se fait en fonction des $P_\alpha$. Il faut donc 
+\'egalement pr\'eciser un $\alpha$. 
+
+\noindent
+{\bf Le format du fichier d'entr\'ee pour Coeff}
+
+\begin{center}
+\it{
+\begin{tabbing}
+\hspace{2cm}\= LCG \hspace{3cm} \= SorteGenerateur \\
+\>Coeff \>   Type de calcul \\
+\>251     \>      m  modulo\\
+\>true    \>      modulo premier\\  
+\>3 250   \>      intervalle pour le multiplicateur a\\
+\>2       \>      mindim\\
+\>4      \>      maxdim\\
+\>2      \>      saut \\ 
+\>2       \>      alpha\\
+\>false   \>      VerifBooleen\\
+\>1       \>      seed\\
+\>1.0 2.0 3.0 1.0 1.0 \> Beta(0),...,Beta(MaxDim)\\
+\end{tabbing}
+}
+\rm {Figure 1 : Format du fichier pour Coeff}
+\end{center}
+
+\noindent
+Tous les champs sont identiques au cas du PAl ou BAl sauf pour le
+cinqui\`eme qui indique plut\^ot l'intervalle \`a l'int\'erieur 
+duquel chercher le meilleur coefficient.

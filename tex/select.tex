@@ -1,0 +1,15 @@
+\defmodule {select}
+
+This command will change automatically the representations of the
+moduli and multipliers in the modules {\tt MULT}, {\tt BASIS} and
+{\tt CONVERT}. To run this program, type ``{\tt select}'' $xx$ $yy$, where
+$xx$ is {\tt LI} or {\tt SI}, and $yy$ is {\tt LR} or {\tt SI}.
+Parameters $xx$ and $yy$  determine the types used for multipliers and for 
+the moduli, respectively.
+The program copies {\tt MULT}$xx$ in {\tt MULT}, {\tt BASIS}$yy$ in
+{\tt BASIS}, and $xxyy$ in {\tt CONVERT}. 
+The module names are also changed appropriately.
+%  Under VAX/VMS, this program will recompile all the modules of
+%  {\tt ExamLCG} that are affected by the change. 
+%  Under MS-DOS, this will be done automatically by the $TopSpeed$ 
+%  make facility.

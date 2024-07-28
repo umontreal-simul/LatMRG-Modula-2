@@ -1,0 +1,51 @@
+\defmodule {LISI}
+
+Procedures to convert between {\tt LONGINT} (multipliers) and
+{\tt SuperInteger} (elements of basis vectors).
+Similar to {\tt LILR}.
+
+\bigskip\hrule
+\code
+
+DEFINITION MODULE LISI;
+
+FROM MULTLI  IMPORT MScal;             (* LONGINT.                        *)
+FROM BASISSI IMPORT BScal;             (* SuperInteger.                   *)
+FROM SUPINT  IMPORT SuperInteger;
+
+PROCEDURE MScalToBScal (S : MScal;  VAR R : BScal);
+\endcode
+  \tab  Converts {\tt S} to {\tt R}
+   (from {\tt LONGINT} to {\tt SuperInteger}).\endtab
+\code
+
+PROCEDURE BScalToMScal (S : BScal;  VAR R : MScal);
+\endcode
+  \tab  Converts {\tt S} to {\tt R}
+   (from {\tt SuperInteger} to {\tt LONGINT}).\endtab
+\code
+
+PROCEDURE SupToBScal (S : SuperInteger;  VAR R : BScal);
+\endcode
+  \tab Copies {\tt S} to {\tt R}.\endtab
+\code
+
+PROCEDURE SupToMScal (S : SuperInteger;  VAR R : MScal);
+\endcode
+  \tab Converts {\tt S} to {\tt R}
+   (from SuperInteger to {\tt LONGINT}).\endtab
+\code
+
+PROCEDURE BScalToSup (S : BScal;  R : SuperInteger);
+\endcode
+  \tab Copies {\tt S} to {\tt R}.\endtab
+\code
+
+PROCEDURE MScalToSup (S : MScal;  R : SuperInteger);
+\endcode
+  \tab Converts {\tt S} to {\tt R}
+   (from {\tt LONGINT} to SuperInteger).\endtab
+\code
+
+END LISI.
+\endcode

@@ -1,0 +1,149 @@
+\defmodule{BASISSI}
+
+Same as {\tt BASISLR}, except that the values are
+represented using the {\tt SuperInteger} type.
+
+\bigskip\hrule
+\code
+
+DEFINITION MODULE BASISSI;
+
+FROM SUPINT   IMPORT SuperInteger;
+FROM CONFIG   IMPORT BDim;
+
+CONST
+   BSizeSI = 2;                        (* Used in BCreateScal.            *)
+TYPE
+   BScal   = SuperInteger;
+   BVect   = ARRAY BDim OF BScal;
+   BMatr   = ARRAY BDim OF BVect;
+
+VAR
+   BZero, BOne, BMinusOne : BScal;     (* 0, 1, and -1                    *)
+
+PROCEDURE BCreateScal (VAR S : BScal);
+\endcode
+  \tab  Creates the {\tt SuperInteger S}.
+   The initial memory space (in words)
+   allocated for the digits of {\tt S} is 2 to the
+   power {\tt BSizeSI} (currently 4 words).
+   (See {\tt Create} in {\tt SUPINT}).\endtab
+\code
+
+PROCEDURE BDeleteScal (VAR S : BScal);
+\endcode
+  \tab  Deallocates the memory allocated for the {\tt SuperInteger S},
+  at a previous call to {\tt BCreateScal}. \endtab
+\code
+
+PROCEDURE BCreateVect (VAR V : BVect; d1, d2 : BDim);
+\endcode
+  \tab  Creates the {\tt SuperInteger} entries for indices 
+  {\tt d1}  to  {\tt d2} inclusive
+  (i.e., extends {\tt V[0..d1-1]} to {\tt V[0..d2]}).
+  If  {\tt d2} is smaller than  {\tt d1}  then does nothing. \endtab
+\code
+
+PROCEDURE BDeleteVect (VAR V : BVect; d1, d2 : BDim);
+\endcode
+  \tab  Deallocates the memory allocated to the {\tt SuperInteger}
+  elements of {\tt V[d1..d2]}.
+  \endtab
+\code
+
+PROCEDURE BCreateMatr (VAR M : BMatr; d1, d2 : BDim);
+\endcode
+  \tab  Creates the {\tt SuperInteger} entries for indices 
+   {\tt d1}  to  {\tt d2} inclusive; i.e., extends the square matrix 
+   {\tt M[0..d1-1, 0..d1-1]} to {\tt M[0..d2, 0..d2]}.
+   If {\tt d1} $> 0$, creates the missing entries in the {\tt d1} 
+   vectors already there, in addition to creating the {\tt d2 - d1 + 1}
+   missing vectors.
+\endtab
+\code
+
+PROCEDURE BDeleteMatr (VAR M : BMatr; d1, d2 : BDim);
+\endcode
+  \tab  Does exactly the opposite of {\tt BCreateMatr (M, d1, d2)}.
+  \endtab
+\code
+
+PROCEDURE BReadScal (VAR S : BScal);
+
+PROCEDURE BWriteScal (S : BScal;   nb : CARDINAL);
+\endcode
+  \tab  Writes the contents of {\tt S} to the current output.
+        Uses {\tt nb} digits per line.  \endtab
+\code
+
+PROCEDURE BWriteVect (VAR V : BVect;  n : BDim;  nb : CARDINAL);
+\endcode
+  \tab  Writes contents of {\tt V} to current output.
+        Uses {\tt nb} digits per line for each number.  \endtab
+\code
+
+PROCEDURE BWriteMatr (VAR M : BMatr;  n : BDim;  nb : CARDINAL);
+\endcode
+  \tab  Writes contents of {\tt M} to current output.
+        Uses nb digits per line for each number.  \endtab
+\code
+
+PROCEDURE BProdScalVect (s : BScal;  VAR V : BVect;  d : BDim);
+PROCEDURE BProdScal (VAR U, V : BVect;  n : BDim;  VAR S : BScal);
+PROCEDURE BProdScalLR (VAR U, V : BVect;  n : BDim) : LONGREAL;
+PROCEDURE BProdScalSI (VAR U, V : BVect; n : BDim; Res : SuperInteger);
+\endcode
+\code
+PROCEDURE BL1NormLR (VAR V : BVect;  n : BDim) : LONGREAL;
+PROCEDURE BL1NormSI (VAR V : BVect;  n : BDim;  S1 : SuperInteger);
+PROCEDURE BL2NormLR (VAR V : BVect;  n : BDim) : LONGREAL;
+PROCEDURE BSupNormLR (VAR V : BVect;  n : BDim) : LONGREAL;
+PROCEDURE BSupNormSI (VAR V : BVect;  n : BDim;  S1 : SuperInteger);
+\endcode
+\code
+PROCEDURE BModifVectLR (VAR U, V : BVect;  c : LONGREAL;  n : BDim);
+PROCEDURE BModifVectLI (VAR U, V : BVect;  c : LONGINT;  n : BDim);
+PROCEDURE BModifVect (VAR U, V : BVect;  c : BScal;  n : BDim);
+\endcode
+\code
+PROCEDURE BChangeSign (VAR S : BScal);
+PROCEDURE BChangeSignVect (VAR V : BVect;  n : BDim);
+PROCEDURE BAffect (S : BScal;  VAR T : BScal);
+PROCEDURE BExchange (VAR S, T : BScal);
+\endcode
+\code
+PROCEDURE BEqual (S, T : BScal): BOOLEAN;
+PROCEDURE BSmaller (S, T : BScal): BOOLEAN;
+PROCEDURE BGreater (S, T : BScal): BOOLEAN;
+\endcode
+\code
+PROCEDURE BAbsSizeOrd (S, T : BScal): INTEGER;
+PROCEDURE BAbs (S : BScal; VAR T : BScal);
+PROCEDURE BSetNeg (VAR S : BScal);
+PROCEDURE BInc (VAR S : BScal; i : LONGINT);
+PROCEDURE BAdd (S, T : BScal; VAR Res : BScal);
+PROCEDURE BMultiply (S, T : BScal; VAR Res : BScal);
+PROCEDURE BDivideRound (S, T : BScal; VAR Res : BScal);
+PROCEDURE BCopyVect (VAR U, V : BVect;  n : BDim);
+PROCEDURE BCopyMatr (VAR M1, M2 : BMatr;  n : BDim);
+PROCEDURE BConvLR (S : BScal): LONGREAL;
+PROCEDURE BConvSI (R : BScal; S : SuperInteger);
+PROCEDURE LIToBScal (i : LONGINT; VAR S : BScal);
+PROCEDURE BAffectIdentMatr (VAR M : BMatr;  n : BDim);
+PROCEDURE BTrMatr (M : BMatr; VAR Mtr : BMatr; d : BDim);
+PROCEDURE BCanonicalVect (VAR V : BVect; i : BDim);
+PROCEDURE BRandomScal (VAR s : BScal; m : BScal);
+
+PROCEDURE BEuclide (A, B : BScal;  VAR C, D, E, F, G : BScal);
+\endcode
+  \tab For given $A$ and $B$, returns $C$, $D$, $E$, $F$, $G$ such that: 
+   \begin {eqnarray*}
+     C  A + D  B  &=& G = \mbox{gcd} (A,B) \\
+     E  A + F  B  &=& 0.
+   \end {eqnarray*}
+where {gcd}  is the greatest common denominator.
+  \endtab
+\code
+
+END BASISSI.
+\endcode

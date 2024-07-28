@@ -1,0 +1,153 @@
+\defmodule{palpha}
+
+\baselineskip=14pt
+
+Le $P_\alpha(s)$ est une mesure de la qualit\'e d'int\'egration d'une
+r\`egle de treillis.  D'une mani\`ere g\'en\'erale, 
+une r\`egle de treillis permet d'approximer
+l'int\'egrale de $f$, une fonction, sur le cube unitaire de dimension $s$.
+$f$ doit \^etre lisse et p\'eriodique par rapport \`a $x \in$ {\bf R}.
+
+La formule g\'en\'erale du $P_\alpha(s)$ pour $\alpha$ entier et pair est 
+\eq
+  P_\alpha (s) = -1 + 1/m \sum_{i=0}^{m-2} \prod_{j=0}^{s-1} \Big[
+                     1- \frac{(-1)^{\alpha /2}(2\pi)^{\alpha}}{\alpha !}B_\alpha(x_{i+j}) \Big] 
+										\label{eq:Palpha}
+\endeq
+o\`u les $B_\alpha(x)$ sont les polyn\^omes de Bernoulli. $x_{i+j}$ est le $i+j^e$ nombre
+g\'en\'er\'e et se situe entre 0 et 1.
+Les premiers polyn\^omes de Bernoulli sont \\\\ 
+\hspace*{18mm} \baselineskip=18pt
+$B_0(x)=1$,\hspace*{9mm} $B_1(x)=x-1/2$,\hspace*{9mm}
+$B_2(x)=x^3-x^2+1/6$,  \\ \hspace*{18mm}
+$B_3(x)=x^3-(3/2)x^2+(1/2)x$,\hspace*{5mm} $B_4(x)=x^4-2x^2+x-1/30$
+
+\noindent
+Les $B_\alpha(x)$ se calculent en utilisant l'extension de la s\'erie suivante:
+$$\frac{te^{xt}}{e^t-1} = \sum_{s=0}^{\infty}B_s \frac{t^s}{s!}$$
+On peut ajouter un poids \`a chacune des dimensions $s$, pour des $\alpha$ pairs.
+La formule du
+$P_\alpha(s)$ devient: 
+$$P_{2\alpha}(s) = \beta_0 \Big\{ -1 + 1/m \sum_{i=0}^{m-2} \prod_{j=0}^{s-1} \Big[
+                     1- \frac{\big( -(2\pi\beta_{j+1})^2\big) ^{\alpha}}{2\alpha !}B_{2\alpha}(x_{i+j}) \Big] \Big\} 
+$$
+
+Le $B_\alpha(s)$, \`a ne pas confondre avec le $B_\alpha(x)$, est une mesure
+indiquant qu'il existe au moins un $P_\alpha(s) \le B_\alpha(s)$.  D'une mani\`ere
+g\'en\'erale, on peut le voir comme une borne sup\'erieure valide en pr\'esence
+des conditions suivantes: $m> e^{\alpha s/(\alpha -1)}$ et premier, $s\ge 2$ et
+$\alpha > 1$.  Pour plus de d\'etails consulter le th\'eor\`eme 4.4, p.83 du
+livre de Sloan et Joe. 
+Il se calcule ainsi:
+\begin{eqnarray*}
+B_\alpha(s) = {\Big( \frac{e}{s} \Big)}^{\alpha s} \frac{(2\ln m + s)^{\alpha s}}{m^\alpha}
+\end{eqnarray*} 
+
+\large
+{\bf Le module PALPHA}
+\normalsize
+
+Module servant de support aux programmes PAl, BAl et Coeff. Ils permettent
+respectivement de trouver le $P_\alpha$ ou  le $B_\alpha$ d'un g\'en\'erateur
+ou enfin de trouver des bons coefficients pour un g\'en\'erateur en
+utilisant le $P_\alpha$ comme discriminant.  
+
+\large
+{\bf palpha}
+\normalsize
+
+Ce programme permet de calculer le $P_\alpha$ pour un 
+g\'en\'erateur et un $\alpha$ donn\'e. 
+Tout d\'ependant du
+$\alpha$
+la fonction de calcul changera. Les donn\'ees suivantes doivent \^etre
+plac\'ees dans un fichier avec l'extension {\tt".dat"} selon le format de
+la figure~1.  Les r\'esultats seront plac\'es dans un fichier  avec l'extension {\tt".res"}.
+
+\large
+{\bf balpha}
+\normalsize
+
+Permet de calculer le $B_\alpha$ d'un g\'en\'erateur.  Pour l'instant
+seulement le cas avec $\alpha = 2$ est impl\'ement\'e.  Le format du
+fichier est le m\^eme que pour le programme PAl. Les donn\'ees devront
+\^etre plac\'ees dans un fichier avec l'extension {\tt".dat"} et les
+r\'esultats se trouveront dans le fichier avec le m\^eme pr\'efixe,
+cette fois avec l'extension {\tt".res"}.
+
+\noindent
+{\bf Le format du fichier d'entr\'ee pour PAl ou BAl}
+
+\begin{center}
+\it{
+\begin{tabbing}
+\hspace{2cm}\= LCG \hspace{3cm} \= SorteGenerateur \\
+\>PAl ou BAl \>   Type de calcul \\
+\>251     \>      m  modulo\\
+\>true    \>      modulo premier\\
+\>33      \>      a  multiplicateur\\
+\>2       \>      mindim\\
+\>4      \>      maxdim\\
+\>2      \>      saut \\ 
+\>2       \>      alpha\\
+\>false   \>      VerifBooleen\\
+\>1       \>      seed\\
+\>1.0 2.0 3.0 1.0 1.0 \> Beta(0),...,Beta(MaxDim)\\
+\end{tabbing}
+}
+\rm {Figure 1 : Format du fichier pour PAl ou BAl}
+\end{center}
+
+%%\begin{figure}[h]
+%%\caption{Format du fichier pour PAl ou BAl}
+%%\end{figure}
+
+\noindent
+{\it Type de calcul} : Permet de d\'eterminer le type de calcul
+\`a effectuer.
+
+\noindent
+{\it Modulo} : le modulo du g\'en\'erateur en base 10, soit un nombre premier ou
+une puissance de 2.  Ce nombre doit \^etre inf\'erieur \`a 3.03E09 ou $2^{31}$.
+
+\noindent
+{\it Modulo premier} : Bool\'een indiquant si le modulo utilis\'e est un 
+nombre premier.
+
+\noindent
+{\it Multiplicateur} : le multiplicateur du g\'en\'erateur en base 10. Il doit \^etre
+inf\'erieur au modulo.  Ou un intervalle dans le cas de la recherche de coefficient.
+La recherche permettra de trouver le meilleur coefficient dans cet intervalle en fonction du
+$P_\alpha$.
+
+\noindent
+{\it Mindim} : Entier  donnant la borne inf\'erieur sur le s (la dimension) 
+dans le calcul \`a effectuer.  
+
+\noindent
+{\it Maxdim} : Entier  donnant la borne sup\'erieur sur le s (la dimension)
+dans le calcul \`a effectuer.
+
+\noindent
+{\it Saut} : Entier d\'eterminant le saut \`a effectuer entre les dimensions.
+
+\noindent
+{\it alpha} : Entier pair, en g\'en\'eral de 2 \`a 10.
+
+\noindent
+{\it VerifBooleen} : Si {\tt true} alors on v\'erifira si la p\'eriode est maximale,
+mettre \`a {\tt false} si aucune v\'erification n'est n\'ecessaire.  Dans le cas de 
+la recherche de coefficient, si {\tt true} alors seulement les g\'en\'erateurs
+\`a p\'eriode maximale seront consid\'er\'es, si {\tt false} alors le
+$P_\alpha$ de tous les g\'en\'erateurs sera \'evalu\'e.  Si par contre le
+modulo n'est pas un nombre premier alors peu importe la valeur entr\'ee \`a
+{\it VerifBooleen},
+nous allons effectuer une recherche sur l'ensemble des coefficients.
+
+
+\noindent
+{\it Seed} : Entier inf\'erieur au modulo qui servira de germe dans le g\'en\'erateur.  
+
+\noindent
+{\it Beta} : Nombres r\'eels permettant de donner un poids \`a chacune des dimensions.
+Il faut entrer dans le fichier une valeur pour $\beta (0),...,\beta (MaxDim)$. 

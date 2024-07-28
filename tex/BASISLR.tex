@@ -1,0 +1,298 @@
+\defmodule{BASISLR}
+
+This module offers basic tools to manipulate scalars, vectors, and matrices
+that are used to represent lattice bases, using the {\tt LONGREAL} type.
+It is used by the modules {\tt LATBASIS}, {\tt REDBAS}, etc.,
+when this representation type is used.
+See that module for more details.
+
+\bigskip\hrule
+\code
+
+DEFINITION MODULE BASISLR;
+
+FROM SUPINT   IMPORT SuperInteger;
+FROM CONFIG   IMPORT BMaxDim, BDim;
+
+TYPE
+   BScal   = LONGREAL;
+   BVect   = ARRAY BDim OF BScal;
+   BMatr   = ARRAY BDim OF BVect;
+   VectLI  = ARRAY BDim OF LONGINT;
+
+VAR
+   BZero, BOne, BMinusOne : BScal;    (* 0, 1, and -1.                   *)
+
+PROCEDURE BCreateScal (VAR S : BScal);
+
+PROCEDURE BDeleteScal (VAR S : BScal);
+
+PROCEDURE BCreateVect (VAR V : BVect; d1, d2 : BDim);
+
+PROCEDURE BDeleteVect (VAR V : BVect; d1, d2 : BDim);
+
+PROCEDURE BCreateMatr (VAR M : BMatr; d1, d2 : BDim);
+
+PROCEDURE BDeleteMatr (VAR M : BMatr; d1, d2 : BDim);
+\endcode
+  \tab These 6 procedures do nothing.
+  There are there only for compatibility with the corresponding
+  procedures in {\tt BASISSI}.
+  \endtab
+\code
+
+PROCEDURE BReadScal (VAR S : BScal);
+
+PROCEDURE BWriteScal (S : BScal;   nb : CARDINAL);
+\endcode
+  \tab  Writes content of {\tt S} in current output file.
+        Uses a total of at least {\tt nb} positions.
+  \endtab
+\code
+
+PROCEDURE BWriteVect (VAR V : BVect;  n : BDim;  nb : CARDINAL);
+\endcode
+  \tab  Writes content of {\tt V} for indices {\tt [1..n]}
+        in current output file.
+        Uses a total of at least {\tt nb} positions for each number.
+  \endtab
+\code
+
+PROCEDURE BWriteMatr (VAR M : BMatr;  n : BDim; nb : CARDINAL);
+\endcode
+  \tab  Writes content of {\tt M} for indices {\tt [1..n][1..n]}
+        in current output file.
+        Uses a total of at least {\tt nb} positions for each number.
+  \endtab
+\code
+
+PROCEDURE BProdScalVect (s : BScal;  VAR V : BVect;  d : BDim);
+\endcode
+  \tab Multiplies vector {\tt V} by scalar {\tt s}. \endtab
+\code
+
+PROCEDURE BProdScal (VAR U, V : BVect;  n : BDim;  VAR S : BScal);
+\endcode
+   \tab Returns in {\tt S} the scalar product of {\tt U} by {\tt V},
+    using components from 1 to {\tt n}. \endtab
+\code
+
+PROCEDURE BProdScalLR (VAR U, V : BVect;  n : BDim) : LONGREAL;
+\endcode
+   \tab Returns the scalar product of {\tt U} by {\tt V},
+    using components from 1 to {\tt n}. \endtab
+\code
+
+PROCEDURE BProdScalSI (VAR U, V : BVect; n : BDim; Res : SuperInteger);
+\endcode
+  \tab  Returns in {\tt S} the scalar product of {\tt U} by {\tt V},
+    using components from 1 to {\tt n}.  {\tt U} and {\tt V} are
+    rounded and converted into {\tt SuperInteger} representation before
+    the computation of the scalar product. \endtab
+\code
+
+PROCEDURE BL1NormLR (VAR V : BVect;  n : BDim) : LONGREAL;
+\endcode
+   \tab Returns the $L_1$ norm of {\tt V},
+    using components from 1 to {\tt n}. \endtab
+\code
+
+PROCEDURE BL2NormLR (VAR V : BVect;  n : BDim) : LONGREAL;
+\endcode
+   \tab Returns the $L_2$ norm of {\tt V},
+    using components from 1 to {\tt n}. \endtab
+\code
+
+PROCEDURE BL1NormSI (VAR V : BVect;  n : BDim;  S1 : SuperInteger);
+\endcode
+   \tab Returns in {\tt S1} the $L_1$ norm of {\tt V},
+    using components from 1 to {\tt n}. \endtab
+\code
+
+PROCEDURE BSupNormLR (VAR V : BVect;  n : BDim) : LONGREAL;
+\endcode
+   \tab Returns the sup norm of {\tt V},
+    using components from 1 to {\tt n}. \endtab
+\code
+
+PROCEDURE BSupNormSI (VAR V : BVect;  n : BDim;  S1 : SuperInteger);
+\endcode
+   \tab Returns in {\tt S1} the sup norm of {\tt V},
+    using components from 1 to {\tt n}. \endtab
+\code
+
+PROCEDURE BModifVectLR (VAR U, V : BVect;  c : LONGREAL;  n : BDim);
+\endcode
+  \tab  Adds {\tt c} times the vector {\tt V} to the vector {\tt U}.
+   Assumes that both vectors have dimension {\tt n}.\endtab
+\code
+
+PROCEDURE BModifVectLI (VAR U, V : BVect;  c : LONGINT;  n : BDim);
+\endcode
+  \tab  Adds {\tt c} times the vector {\tt V} to the vector {\tt U}.
+   Assumes that both vectors have dimension {\tt n}.\endtab
+\code
+
+PROCEDURE BModifVect (VAR U, V : BVect;  c : BScal;  n : BDim);
+\endcode
+  \tab  Adds {\tt c} times the vector {\tt V} to the vector {\tt U}.
+   Assumes that both vectors have dimension {\tt n}.\endtab
+\code
+
+PROCEDURE BChangeSign (VAR S : BScal);
+\endcode
+  \tab  Changes the sign of S. \endtab
+\code
+
+PROCEDURE BChangeSignVect (VAR V : BVect;  n : BDim);
+\endcode
+  \tab  Changes the sign of elements {\tt 1} to {\tt n} of vector {\tt V}.
+  \endtab
+\code
+
+PROCEDURE BAffect (S : BScal;  VAR T : BScal);
+\endcode
+  \tab  Gives to {\tt T} the value of {\tt S}.\endtab
+\code
+
+PROCEDURE BExchange (VAR S, T : BScal);
+
+PROCEDURE BEqual (S, T : BScal): BOOLEAN;
+\endcode
+  \tab  Returns {\tt TRUE} if {\tt S} is equal to {\tt T},
+   {\tt FALSE} otherwise.
+  \endtab
+\code
+
+PROCEDURE BSmaller (S, T : BScal): BOOLEAN;
+\endcode
+  \tab  Returns {\tt TRUE} if {\tt S} is smaller than {\tt T},
+  {\tt FALSE} otherwise.
+  \endtab
+\code
+
+PROCEDURE BGreater (S, T : BScal): BOOLEAN;
+\endcode
+  \tab  Returns {\tt TRUE} if {\tt S} is greater than {\tt T},
+  {\tt FALSE} otherwise.
+  \endtab
+\code
+
+PROCEDURE BAbsSizeOrd (S, T : BScal): INTEGER;
+\endcode
+  \tab  Returns -1 (resp. 0, +1) according as {\tt S} $>$ (resp. $=, <$) {\tt T}. 
+  \endtab
+\code
+
+PROCEDURE BAbs (S : BScal;  VAR T : BScal);
+\endcode
+  \tab  Returns in {\tt T} the absolute value of {\tt S}. \endtab
+\code
+
+PROCEDURE BSetNeg (VAR S : BScal);
+\endcode
+  \tab  Changes the sign of {\tt S} if it is not negative.
+  \endtab
+\code
+
+PROCEDURE BInc (VAR S : BScal; i : LONGINT);
+\endcode
+  \tab  Adds  {\tt i}  to  {\tt S}.
+  \endtab
+\code
+
+PROCEDURE BAdd (S, T : BScal;  VAR Res : BScal);
+\endcode
+  \tab  Returns in {\tt Res} the sum of {\tt S} and {\tt T}.  \endtab
+\code
+
+PROCEDURE BMultiply (S, T : BScal;   VAR Res : BScal);
+\endcode
+  \tab  Returns in {\tt Res} the product of {\tt S} by {\tt T}. \endtab
+\code
+
+PROCEDURE BDivideRound (S, T : BScal; VAR Res : BScal);
+\endcode
+  \tab  Returns in {\tt Res} the result of the division of {\tt S}
+        by {\tt T}.  The result is rounded.  For results just in the
+        middle of two integers, the value returned by the function is
+        the integer the nearest of zero.
+        Ex.: If $S=5.0$ and $T=10.0$, then the returned value is 0.
+            If $S=-5.0$ and $T=10.0$, then the returned value is also 0.
+  \endtab
+\code
+
+PROCEDURE BCopyVect (VAR U, V : BVect;  n : BDim);
+\endcode
+  \tab  Copies the vector {\tt U}, of dimension {\tt n}, into vector {\tt V}.
+  \endtab
+\code
+
+PROCEDURE BCopyMatr (VAR M1, M2 : BMatr;  n : BDim);
+\endcode
+  \tab  Copies matrix {\tt M1}, of dimension {\tt n}, into matrix {\tt M2}.
+  \endtab
+\code
+
+PROCEDURE BConvLR (S : BScal): LONGREAL;
+\endcode
+  \tab  Returns the {\tt LONGREAL} representation of {\tt S}.
+  Is there only for compatibility with {\tt BASISSI}. \endtab
+\code
+
+PROCEDURE BConvSI (R : BScal;  S : SuperInteger);
+\endcode
+  \tab  Returns in {\tt S} the {\tt SuperInteger} representation of {\tt R}.
+  \endtab
+\code
+
+PROCEDURE LIToBScal (i : LONGINT; VAR S : BScal);
+\endcode
+   \tab Converts i to  {\tt S}\endtab
+\code
+
+PROCEDURE BAffectIdentMatr (VAR M : BMatr;  n : BDim);
+\endcode
+  \tab  Initializes {\tt M[1..n,1..n]} to the identity matrix.\endtab
+\code
+
+PROCEDURE BTrMatr (M : BMatr;   VAR Mtr : BMatr;   d : BDim);
+\endcode
+  \tab  Computes the transposed matrix of {\tt M}, and
+        returns the result in {\tt Mtr}.
+  \endtab
+\code
+
+PROCEDURE BCanonicalVect (VAR V : BVect;  i : BDim);
+\endcode
+   \tab Produces the vector with all coordinates equal to zero with the
+   exception of the $i$-th coordinate which is equal to one.
+   \endtab
+\code
+
+PROCEDURE BRandomScal (VAR s : BScal; m : BScal);
+\endcode
+   \tab Produces a random integer in the interval $[0,m)$, with a uniform
+   distribution. \endtab
+\code
+
+PROCEDURE GCD2vect (VAR V : VectLI;   k, n : BDim) : LONGINT;
+\endcode
+ \tab  Computes and returns the greatest common divisor of the vectors
+  {\tt V[k],\dots,V[n]}.
+ \endtab
+\code
+
+PROCEDURE BEuclide (A, B : BScal;  VAR C, D, E, F, G : BScal);
+\endcode
+  \tab For given $A$ and $B$, returns $C$, $D$, $E$, $F$, $G$ such that: 
+   \begin {eqnarray*}
+     C  A + D  B  &=& G = \mbox{gcd} (A,B) \\
+     E  A + F  B  &=& 0,
+   \end {eqnarray*}
+where {gcd}  is the greatest common denominator.
+  \endtab
+\code
+
+END BASISLR.
+\endcode

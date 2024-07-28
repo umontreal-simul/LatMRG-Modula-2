@@ -1,0 +1,283 @@
+\defmodule{MRG}
+
+This module offers tools to analyze simple or combined 
+multiple recursive (linear congruential) generators (MRGs).
+One must first initialize the module with a given modulus,
+a given order, and a maximal dimension, by calling {\tt InitMRG}.
+Each MRG will then be defined by a vector of multipliers {\tt a},
+where {\tt a[i]} represents $a_i$ and the MRG is defined by
+ $$ x_n := (a_1 x_{n-1} + \cdots + a_k x_{n-k}) \mod m.$$
+One can then build the lattice basis associated to a vector of multipliers
+for a given dimension, or apply the spectral test, or the Beyer test,
+or both simultaneously, for all dimensions up to a specified limit.
+The multipliers and modulus can be represented as {\tt LONGINT} or
+{\tt SuperInteger}.  This can be changed by the command {\tt select}.
+
+\bigskip\hrule
+\code
+
+DEFINITION MODULE MRG;
+
+FROM MULT     IMPORT MScal, MVect;
+FROM BASIS    IMPORT BVect;
+FROM CONFIG   IMPORT MDim, BDim, OutputType;
+FROM LATBASIS IMPORT Basis;
+FROM TESTLAT  IMPORT TestConfig;
+FROM NORM     IMPORT CriterionType, NormType, Normaliz;
+FROM REDBAS   IMPORT VerifyType;
+FROM SUPINT   IMPORT SuperInteger;
+FROM SUPFACT  IMPORT Factors;
+IMPORT BASISLR, MULTLI, MULTSI;
+
+TYPE
+   MRGen =  POINTER TO InfoMRG;
+   InfoMRG = RECORD
+      Bas   : Basis;
+      k     : MDim;                     (* k = Order  of the recurrence *)
+      aLI   : MULTLI.MVect;             (* Coefficients of the recurrence *)
+      aSI   : MULTSI.MVect;             (*               "                *)
+      END;
+
+
+
+   LatticeType = (Full, Recurrent, Orbit, PrimePower);
+\endcode
+ \tabb Indicates which type of lattice is analyzed: that generated 
+  by all possible states ({\tt Full}), 
+  or by the set of recurrent states ({\tt Recurrent}), 
+  or by a single forward orbit of the generator
+  ({\tt Orbit}) for the case where it has several cycles, 
+  or by a single orbit in the case where
+  some component is an MLCG with modulus that is a power of a prime $p$
+  ({\tt PrimePower}).  In the latter case, one must divide the modulus
+  by an appropriate power of $p$, as described in \cite{rLEC97c},
+  before calling a test procedure. 
+  When {\tt LatticeType = Orbit}, the initial state must be specified
+  in the array {\tt InSta} (see below).
+  See also the data field {\em LatticeType\/} for the program {\tt seekl}.
+ \endtabb
+\code
+
+
+VAR
+   Bas : Basis;
+\endcode
+ \tabb  Lattice basis built and used by the procedure {\tt Test}.
+   Can be recovered after calling {\tt Test}.
+ \endtabb
+\code
+
+   Q2, D2, S2 : BASISLR.BVect;
+\endcode
+ \tabb  Those vectors contain the {\em squares\/} of the Beyer 
+   quotients $q_t$, of the distances between
+   hyperplanes $d_t$, and of the values of $S_t$, respectively, computed in
+   the last call of {\tt Test} or {\tt TestLa}.
+ \endtabb
+\code
+
+   Mins2, Minq2 : BASISLR.BVect;
+\endcode
+ \tabb  Gives the current minimal values of 
+   $S_t$ and $q_t$ for a generator to be considered, in each dimension.
+   The module initializes these bounds to zero.
+ \endtabb
+\code
+ 
+   MaxAllDim : BOOLEAN;
+\endcode
+ \tabb  {\tt TRUE} if we are always looking for generators with the
+  highest figures of merit, in all the dimensions.
+  {\tt FALSE} if we want to {\em minimize\/} the figure of merit in
+  some set of dimensions (that is, in some interval or category).
+ \endtabb
+\code
+
+   TestCompleted : BOOLEAN;
+\endcode
+ \tabb  {\tt TRUE} if the last call to {\tt Test} or {\tt TestLa}
+  has been successful, {\tt FALSE} otherwise.
+ \endtabb
+\code
+
+   Lacunary : BOOLEAN;
+\endcode
+ \tabb  When this variable is {\tt TRUE}, the module treats lacunary
+   indices; otherwise it assumes that the vectors are formed with
+   successive indices.
+ \endtabb
+\code
+
+   LatType : LatticeType;
+\endcode
+ \tabb  Indicates which lattice or sublattice is analyzed.
+  See the data field {\em LatticeType\/} in {\tt seekl}.
+  However, in the case {\tt PrimePower}, the modulus of each component
+  must be divided appropriately {\em before\/} calling {\tt Test}
+  or {\tt TestLa}; these test procedures assume that the modulus has 
+  already been ajusted (reduced).
+ \endtabb
+\code
+
+   DualLattice : BOOLEAN;
+\endcode
+ \tabb When {\tt TRUE}, we seek short vectors in the {\em dual\/}
+  lattice (e.g., to compute the distance between adjacent hyperplanes).
+  When {\tt FALSE}, we seek short vectors in the {\em primal\/}
+  lattice.  The default value is {\tt TRUE}.
+ \endtabb
+\code
+
+   UsedNorm : NormType;
+\endcode
+ \tabb  Which norm type is used to measure the length of the vectors.
+  The default value is {\tt L2Norm}.
+  WARNING: For other norms, the implementation is only partial, and
+  only {\tt Spectral} is admitted for the type of test.
+ \endtabb
+\code
+
+  NormalG : Normaliz;
+\endcode
+ \tabb To normalize the length of the shortest vectors (See module NORM).
+ \endtabb
+\code
+
+   InvertCrit : BOOLEAN;
+\endcode
+ \tabb  If {\tt TRUE}, the value of the criterion $S_t$ is {\em inverted\/} 
+  in the results, i.e., the criterion $S_t$ becomes a number larger than 1,
+  the {\em smaller\/} the better.
+ \endtabb
+\code
+
+   InSta : ARRAY MDim OF SuperInteger;    
+\endcode
+ \tabb If {\tt LatType = Orbit} then the user must specify a seed which
+  will be stored in {\tt InSta}. 
+ \endtabb
+\code
+
+PROCEDURE InitMRG (m : MScal;  k : MDim;  d : BDim);
+\endcode
+  \tab  From now on, this module will treat multiple recursive generators
+   of order {\tt k} with modulus {\tt m}. 
+   Dimensions of bases cannot exceed {\tt d}.
+   (One can recall this procedure to change {\tt m}, {\tt k}, or {\tt d}).
+   This procedure calls {\tt MULT.MSetm}.
+\endtab
+\code
+
+PROCEDURE DeleteMRG (d : BDim);
+\endcode
+  \tab Deallocates the memory allocated to the matrices of {\tt SuperIntegers}
+  {\tt VSI} and {\tt WSI}, and to the vectors of type {\tt BVect}, 
+  {\tt xi, LacI}
+  and {\tt q}, at a previous call to {\tt InitMRG}. It also calls 
+  the procedure {\tt LATBASIS.DeleteBasis}, because {\tt LATBASIS.InitBasis} is
+  called by {\tt InitMRG}. Must be called only if {\tt InitMRG} has been called
+  previously.
+\endtab
+\code
+
+PROCEDURE BuildBasis (B : Basis;   VAR a : MVect;   n : BDim);
+\endcode
+   \tab  Builds the basis directly in dimension {\tt n}.
+   \endtab
+\code
+
+PROCEDURE IncDimBasis (B : Basis);
+\endcode
+   \tab  Increments by 1 the dimension of the basis.
+   \endtab
+\code
+
+PROCEDURE Test
+   ( VAR a          : MVect;
+     T              : CriterionType;
+     FromDim, ToDim : BDim;
+     VerifyBB       : VerifyType;
+     Out            : OutputType );
+
+\endcode
+ \tab  Applies the test {\tt T} (Beyer and/or Spectral)
+   to the MRG generator corresponding to {\tt a}, in dimensions
+   {\tt FromDim} to {\tt ToDim}.
+   The initial basis is built automatically, and during the procedure,
+   the variable {\tt Bas} will contain the current basis.
+   {\tt VerifyBB} indicates if
+   the results must be verified in a second pass, with error bounds
+   on the floating-point computations for the branch-and-bound.
+   The parameter {\tt Out} specifies the form of output produced.
+   If a test fails, then the procedure stops and the variable
+   {\tt TestCompleted} is set to {\tt FALSE}.
+ \endtab
+\code
+
+PROCEDURE TestCri
+   ( VAR a          : MVect;
+     T              : CriterionType;
+     FromDim, ToDim : BDim;
+     VerifyBB       : VerifyType;
+     Out            : OutputType;
+     r              : BDim;
+     n              : INTEGER );
+\endcode
+  \tab Does the same thing as {\tt Test}, but two additional parameters
+  {\tt r} and {\tt n} must be specified, which are the rank and the copy 
+  factor for copy-rules, and then the basis are modified accordingly.
+  Must be used only if {\tt FromDim} is larger than {\tt r}. Not very useful
+  in the context of LCG's, but it would have been complicated to write
+  this procedure and the one it calls, {\tt CriSpectralTest()}, in a
+  separate module, because they use variables internally declared in 
+  {\tt MRG}. The LCG corresponding to the rank 1 rule must have its
+  modulo and multiplier modified before {\tt TestCri} is called.
+  THIS PROCEDURE IS NOT IMPLEMENTED. 
+  \endtab
+\code
+
+PROCEDURE BuildLaBasis
+   (B : Basis;   VAR a : MVect;   VAR I : BVect;   n, MaxDim : BDim);
+\endcode
+ \tab  Builds the (lacunary) basis directly in dimension {\tt n}.
+   One must indicate MaxDim and use IncDimLaBasis only for dimensions
+   smaller than this.
+   The vector {\tt I} must contain the {\tt MaxDim} lacunary indices.
+ \endtab
+\code
+
+PROCEDURE IncDimLaBasis (B : Basis);
+\endcode
+  \tab  Increments by 1 the dimension of the basis. The basis
+   must have been initialized by {\tt InitLaBasis}
+   and the dimension of {\tt B} must be less than {\tt MaxDim}.
+  \endtab
+\code
+
+PROCEDURE TestLa
+   ( VAR a          : MVect;
+     VAR I          : BVect;
+     T              : CriterionType;
+     FromDim, ToDim : BDim;
+     VerifyBB       : VerifyType;
+     Out            : OutputType );
+\endcode
+ \tab  Similar as {\tt Test}, but with lacunary indices.
+  The vector {\tt I} must contain the {\tt ToDim} lacunary indices.
+ \endtab
+\code
+
+PROCEDURE PerMax (VAR a : MVect;   VAR ListmMS1, Listr : Factors) : BOOLEAN;
+\endcode
+  \tab  Checks if the generator corresponding to {\tt a}
+    has maximal period. If {\tt m} is not prime then the procedures stops
+    and {\tt TestCompleted} is set to {\tt FALSE}.
+    {\tt ListmMS1} and {\tt Listr} must contain the factors of
+    {\tt m-1} and {\tt r}, or {\tt NIL} if the factors are unknown.
+    (See {\tt MULT.SetFactors}.)
+   \endtab
+\code
+
+END MRG.
+\endcode
+

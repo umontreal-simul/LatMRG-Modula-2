@@ -1,0 +1,47 @@
+\defmodule{SISI}
+
+Procedures to convert between {\tt SuperInteger} (multipliers) and
+{\tt SuperInteger} (elements of basis vectors).
+Simply copies the value (equivalent to {\tt Affect} in {\tt SUPINT}).
+
+\bigskip\hrule
+\code
+
+DEFINITION MODULE SISI;
+
+FROM MULTSI  IMPORT MScal;             (* SuperInteger.                   *)
+FROM BASISSI IMPORT BScal;             (* SuperInteger.                   *)
+FROM SUPINT  IMPORT SuperInteger;
+
+PROCEDURE MScalToBScal (S : MScal;  VAR R : BScal);
+\endcode
+  \tab  Copies {\tt S} to {\tt R}.\endtab
+\code
+
+PROCEDURE BScalToMScal (S : BScal;  VAR R : MScal);
+\endcode
+  \tab  Copies {\tt S} to {\tt R}.\endtab
+\code
+
+PROCEDURE SupToBScal (S : SuperInteger; VAR R : BScal);
+\endcode
+  \tab Copies {\tt S} to {\tt R}.\endtab
+\code
+
+PROCEDURE SupToMScal (S : SuperInteger; VAR R : MScal);
+\endcode
+  \tab Copies {\tt S} to {\tt R}.\endtab
+\code
+
+PROCEDURE BScalToSup (S : BScal; R : SuperInteger);
+\endcode
+  \tab Copies {\tt S} to {\tt R}.\endtab
+\code
+
+PROCEDURE MScalToSup (S : MScal; R : SuperInteger);
+\endcode
+  \tab Copies {\tt S} to {\tt R}.\endtab
+\code
+
+END SISI.
+\endcode

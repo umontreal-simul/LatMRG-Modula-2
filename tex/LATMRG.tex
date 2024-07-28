@@ -1,0 +1,39 @@
+\defmodule{LATMRG}
+
+The files {\tt LATMRG.h} and  {\tt LATMRG.c} exist uniquely to permit one to 
+use LatMRG directly from a {\bf C} program.   For this, one must include the directive
+
+\noindent {\tt \#include "LATMRG.h"}
+
+\noindent at the beginning of the file and then add
+
+\noindent {\tt LATMRG\_BEGIN (argc, argv);}
+
+\noindent as a first instruction in the fonction 
+
+\noindent {\tt int main(int argc, char **argv);}
+
+To use functions from {\tt mylib}, {\tt simod}, and {\tt sentiers}, 
+one must include the header files
+
+\noindent {\tt \#include "MYLIB.h"}\hfill\break
+\noindent {\tt \#include "SIMOD.h"}\hfill\break
+\noindent {\tt \#include "SENTIERS.h"}
+
+One can consult the appropriate {\tt *.h} header files in {\tt latmrg/xds} 
+to see the prototypes for the external {\bf C} functions.
+
+
+\bigskip\hrule
+\code
+\hide
+<* +M2EXTENSIONS *>
+<* +NOHEADER *>
+<* +CSTDLIB *>
+\endhide
+DEFINITION MODULE ["C"] LATMRG;
+
+PROCEDURE LATMRG_BEGIN();
+
+END LATMRG.
+\endcode

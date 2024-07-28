@@ -1,0 +1,253 @@
+\defmodule {REDBAS}
+
+This module offers tools to reduce a basis in various ways,
+and to find a shortest vector in a lattice
+using pre-reductions and a branch-and-bound (BB) procedure.
+It also has a procedure to compute a Minkowski-reduced basis
+(this is much more expensive than finding a shortest vector).
+%%  See \cite{rCOU96x} for more details.
+One must first call {\tt InitREDBAS} before calling any other procedure
+in this module.
+
+\bigskip\hrule
+\code
+
+DEFINITION MODULE REDBAS;
+
+IMPORT BASISLR;
+FROM LATBASIS IMPORT Basis;
+FROM CONFIG   IMPORT BDim;
+
+TYPE
+   VerifyType  = (Verify0, Verify2, Verify3);
+\endcode
+ \tabb Type of verification performed by the tests:
+    uses {\tt REDBAS},  {\tt REDBAS2}, or {\tt REDBAS3}
+    for {\tt Verify0}, {\tt Verify2}, and {\tt Verify3},
+   respectively.
+ \endtabb
+\code
+
+
+VAR
+   PreRedDieterSV, PreRedLLLSV, PreRedLLLRM : BOOLEAN;
+\endcode
+  \tabb  These boolean variables indicate which type of pre-reduction 
+   is to be performed for {\tt ShortestVector} (SV) and for 
+   {\tt ReductMinkowski} (RM).
+   {\tt Dieter} means the pairwise pre-reduction as in the procedure
+   {\tt PreRedDieter}.  
+   {\tt LLL} means the LLL reduction of Lenstra, Lenstra, and Lov\'asz.
+
+   The variable {\tt PreRedDieterSV} is originally set to {\tt TRUE}
+   and the 2 others are originally set to {\tt FALSE}.
+   These variables are reset automatically depending on the thresholds 
+   {\tt MinkLLL, ShortDiet, ShortLLL} as explained below.
+   Note that the LLL reduction is never performed when {\tt SISquares = TRUE}.
+   \pierre {Reason?}
+ \endtabb
+\code
+
+   ShortDiet : LONGINT;
+\endcode
+ \tabb
+   Whenever the number of nodes in the BB tree exceeds the threshold 
+   {\tt ShortDiet}, in the {\tt ShortestVector} procedure, {\tt PreRedDieterSV}
+   is automatically set to {\tt TRUE} for the next call; 
+   otherwise it is set to {\tt FALSE}.
+   The default value is 1000.
+ \endtabb
+\code
+
+   ShortLLL : LONGINT;
+\endcode
+ \tabb 
+   Whenever the number of nodes in the BB tree exceeds the threshold 
+   {\tt ShortLLL}, in the {\tt ShortestVector} 
+   procedure, {\tt PreRedLLLSV}
+   is automatically set to {\tt TRUE} for the next call; 
+   otherwise it is set to {\tt FALSE}.
+   The default value is 1000.
+  \endtabb
+\code
+
+   MinkLLL : LONGINT;
+\endcode
+ \tabb  
+   Whenever the number of nodes in the BB tree exceeds {\tt MinkLLL}
+   in the {\tt ReductMinkowski} procedure,
+   {\tt PreRedLLLRM} is automatically set to {\tt TRUE} for the
+   next call; otherwise it is set to {\tt FALSE}.
+   The default value is 500\,000.
+  \endtabb
+\code
+
+   MaxPreRed : LONGINT;
+\endcode
+ \tabb
+   Maximum number of transformations in the procedure {\tt PreRedDieter}.
+   After {\tt MaxPreRed} successful transformations have been performed,
+   the prereduction is stopped.
+   The default value is 1\,000\,000.
+  \endtabb
+\code
+
+   MaxNodesBB : LONGINT;     
+\endcode
+  \tabb The maximum number of nodes that we are ready to accept
+   in the branch-and-bound (BB) tree when calling {\tt ShortestVector}
+   or {\tt ReductMinkowski}.  When this number is exceeded, the procedure
+   aborts and returns {\tt FALSE}.
+   The default value is 10\,000\,000.
+  \endtabb
+\code
+
+
+PROCEDURE InitREDBAS (MaxDim : BDim);
+\endcode
+  \tab  Initializes the internal variables of this 
+   module with a given upper dimension {\tt MaxDim}
+   for the bases, for memory allocation purposes.
+   This {\tt MaxDim} (saved in the internal variable {\tt CurMaxDim})
+   should be at least as large as the dimension of any
+   {\tt Basis B} that this module has to work on (i.e., {\tt B\^{}.Dim}
+   can never exceed {\tt CurMaxDim}).
+   \endtab
+\code
+
+PROCEDURE DeleteREDBAS;
+\endcode
+  \tab Deallocates the memory which was allocated when calling
+  {\tt InitREDBAS} for the last time.
+% for the vector of {\tt SuperIntegers} 
+%  {\tt Sv}, the matrices {\tt VTemp}, and 
+%  {\tt WTemp}, and the vector {\tt ZeroVect}.
+   Must be called only if {\tt InitREDBAS} has been called previously.
+  \endtab
+\code
+
+PROCEDURE GetMaxDim (): BDim;
+\endcode
+  \tab  Returns the current value of {\tt CurMaxDim}.
+   \endtab
+\code
+
+PROCEDURE PairwiseRedPrimal (B : Basis;  i, d : BDim);
+\endcode
+  \tab  Performs pairwise reductions.
+  This procedure tries to reduce each basis vector with 
+  index larger than $d$, and distinct from $i$, by adding to it a 
+  multiple of the $i$-th vector.  
+  Always use the Euclidean norm.
+ \endtab
+\code
+
+PROCEDURE PairwiseRedDual (B : Basis;  i : BDim);
+\endcode
+  \tab  Performs pairwise reductions, trying to reduce every other vector of
+  the {\em dual\/} basis by adding multiples of the $i$-th vector.
+  That may change the $i$-th vector in the primal basis.
+  Each such dual reduction is actually performed only if that does not
+  increase the length of vector $i$ in the primal basis. 
+  Always use the Euclidean norm.
+ \endtab
+\code
+
+PROCEDURE PreRedDieter (B : Basis;  d : BDim);
+\endcode
+  \tab  Performs the reductions of the preceding two procedures 
+  using cyclically all values of $i$ (only for $i > d$ in the latter case)
+  and stops after either {\tt MaxPreRed} successful transformations have been 
+  achieved or no further reduction is possible.
+  Always use the Euclidean norm.
+  \endtab
+\code
+
+PROCEDURE SetScale (B : Basis);
+\endcode
+\tab  This procedure is used when {\tt SISquares = TRUE}, 
+   just before doing the Choleski decomposition
+   for the branch-and-bound procedure, in the procedures {\tt ShortestVector}
+   and {\tt ReductMinkowski}.
+   It rescales the square Euclidean lengths of the basis and $m$-dual 
+   basis vectors by factors {\tt EchVV} and {\tt EchWW}, respectively,
+   and $m^2$ by the product {\tt EchVV * EchWW}.
+   These factors are chosen by the procedure 
+   so that the log of the largest squared
+   Euclidean length is not too far from 0.
+   The rescaled values are placed in {\tt VVLR} and {\tt WWLR}, and the 
+   rescaled value of $m^2$ in {\tt mLR2}.
+   The Choleski decomposition and the branch-and-bound procedures
+   use these rescaled values to avoid {\tt LONGREAL} overflow.
+\endtab
+\code
+
+PROCEDURE RedLLL (B : Basis;  fact : LONGREAL;  m : LONGINT;  Max : BDim);
+\endcode
+  \tab  Performs a LLL basis reduction with coefficient {\tt fact}, which must
+   be smaller than one.  If {\tt fact} is closer to one, the basis will be
+   (typically) ``more reduced'', but that will require (slightly) more work.
+   Always use the Euclidean norm.
+   {\em Danger: With the current implementation, there could be {\tt LONGREAL}
+   overflow when {\tt SISquares = TRUE} and there are very long basis vectors.}
+  \endtab
+\code
+
+PROCEDURE CalculCholeski (B : Basis;  VAR DC2 : BASISLR.BVect;
+                          VAR C0 : BASISLR.BMatr) : BOOLEAN;
+\endcode
+\tab  Performs a Choleski decomposition of the matrix of scalar
+  products of the basis vectors, i.e., $\bU'\bU = \bV'\bV$ where $\bV$
+  is the matrix of the basis vectors and $\bU$ is upper triangular.
+  Returns in {\tt C0} the elements of $\bU$ that are {\em strictly above\/}
+  the diagonal, i.e., $u_{i,j}$ for $j > i$.
+  Returns in {\tt DC2} the squared elements of the diagonal of $\bU$.
+  If {\tt SISquares = TRUE}, these elements are rescaled (divided) by
+  {\tt EchVV}.  Returns {\tt TRUE} if the decomposition was successful.
+\endtab
+\code
+
+PROCEDURE TransformStage3 (B : Basis;  VAR z : BASISLR.VectLI;  VAR k : BDim);
+\endcode
+ \tab Procedure used in {\tt ReductMinkowski} to perform a transformation
+  of stage 3 described in \cite{rAFF85a}. Also used in {\tt ShortestVector}.
+  Assumes that $\sum_{i=1}^t z_i V_i$ is a short vector that will enter
+  the basis.  Tries to reduce some vectors by looking for indices $i < j$
+  such that $|z_j| > 1$ and $q=\lfloor z_i/z_j\rfloor \not=0$,
+  and adding $q V_i$ to $V_j$ when this happens.
+  Returns in $k$ the last index $j$ such that $|z_j|=1$.
+ \endtab
+\code
+
+PROCEDURE ShortestVector (B : Basis) : BOOLEAN;
+\endcode
+  \tab Computes the shortest vector in lattice with basis {\tt B},
+   using branch-and-bound.
+   If {\tt MaxNodesBB} is exceeded during {\em one} of the branch-and-bounds,
+   the procedure aborts and returns {\tt FALSE}.
+   Otherwise, it returns {\tt TRUE}.
+%  This procedure does not care about numerical imprecision, and therefore,
+%  the results are not 100\% reliable.
+\endtab
+\code
+
+PROCEDURE ReductMinkowski (B : Basis;  d : BDim) : BOOLEAN;
+\endcode
+   \tab  Reduces {\tt B} into a Minkowski reduced basis, with respect to the
+   Euclidean norm, assuming
+   that the first $d$ vectors are already reduced and sorted.
+   If {\tt MaxNodesBB} is exceeded during {\em one} of the branch-and-bounds,
+   the procedure aborts and returns {\tt FALSE}.
+   Otherwise, it returns {\tt TRUE}, and the basis is reduced and
+   is sorted by vector lengths (the shortest vector is {\tt V[1]} and
+   the longest is {\tt V[Dim]}).
+   This procedure does not care about numerical imprecision due to the
+   (64-bit) floating-point representation.
+   In this sense, the results are not 100\% reliable.
+   \endtab
+\code
+
+END REDBAS.
+\endcode
+
+

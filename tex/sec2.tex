@@ -1,0 +1,418 @@
+\section {Using the programs in executable form}
+\typeout {Section 2 ***}
+
+At the high-level end, {\tt LatMRG} provides programs in executable form.
+These programs read their data in files or work interactively with the
+user. Appendix A describes their use in more detail.
+In this section, we give examples.
+The user can also tailor his own programs using the lower-level
+tools offered by the different modules of {\tt LatMRG}.
+This is discussed in the next section.
+
+The program {\tt maxper} checks whether a given generator has maximal period.
+The program {\tt findmk} can find values of $m$ and $k$ such that
+$r = (m^k-1)/(m-1)$ is prime. 
+The programs {\tt latl} and {\tt lats} perform standard lattice and/or 
+spectral tests for that generator.
+The only difference between the latter two programs is that in {\tt latl}, 
+the multipliers and basis components are implemented in {\tt LONGINT} and
+{\tt LONGREAL}, respectively, while in {\tt lats}, they are implemented as
+{\tt SuperInteger}'s.
+More comprehensive (and larger) programs perform computer searchs
+to seek the ``best'' generators of a given type, according to maximal period
+and lattice structure criteria.
+These programs also come in two versions.
+In {\tt seekl}, the multipliers and basis components are implemented in
+{\tt LONGINT} and {\tt LONGREAL}, respectively,
+while in {\tt seeks}, both are implemented as {\tt SuperInteger}'s.
+
+The program {\tt menumrg}  is an interactive program which allows the
+user to build a lattice basis for a given generator, and then
+manipulate, compare, or reduce lattice bases.
+
+We now give a few concrete examples of data files and results.
+The timings given are from runs on a SUN SparcStation 20, under SunOS 5.4,
+using version 4.5.1 of the MCS Modula-2 compiler \cite{iJAG92a}.
+These results were obtained with the `February 1996' version of {\tt LatMRG}.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%  This is in file  fish31.dat
+%
+\setbox0=\vbox {\hsize = 6.3in
+\code\smallc
+
+   FALSE                        ReadGenFile
+   1                            J  (Nb. of components) 
+   MRG                          Gener. type
+   2147483647  1 0              m  (modulus) 
+   1                            k  (order) 
+   742938285                    a  (multiplier) 
+   2  30                        MinDim   MaxDim
+   BeyerSpectral  Hermite       LatticeInfo
+   Full                         LatticeType
+   1  1                         LaGroupSizes   Spacings
+   NoVerify                     VerifyBB
+   1000000                      MaxNodesBB
+   TEX                          ResultForm
+
+\endcode }
+
+\begin{figure}[hbt] 
+\centerline {\boxit{\box0}}
+\caption { Example of a data file for the program {\tt latl},
+           in file {\tt fish31.dat}. }
+\label {lat1.dat}
+\end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%  This is in file  fish31.tex
+%
+\begin {table}[hbt] 
+\caption { Results of {\tt latl} in file {\tt fish31.tex}. }
+\label {lat1.tex}
+\medskip
+\centering
+\begin {tabular}{|rlllr|}
+\hline
+ &&&&  cumulative \\
+   $t$ &      $d_t$   &      $q_t$  &      $S_t$  &  cpu (sec)\\
+\hline
+    2  &   2.31556E-5 &     0.84858 &     0.86725 &      0.02 \\
+    3  &   8.02308E-4 &     0.90348 &     0.86068 &      0.03 \\
+    4  &   4.52795E-3 &     0.88522 &     0.86270 &      0.04 \\
+    5  &      0.01328 &     0.79661 &     0.83195 &      0.05 \\
+    6  &      0.02586 &     0.85416 &     0.83415 &      0.06 \\
+    7  &      0.05530 &     0.59317 &     0.62392 &      0.07 \\
+    8  &      0.06820 &     0.64472 &     0.70666 &      0.09 \\
+    9  &      0.10600 &     0.67859 &             &      0.10 \\
+   10  &      0.10847 &     0.73126 &             &      0.13 \\
+   11  &      0.16903 &     0.63121 &             &      0.15 \\
+   12  &      0.24254 &     0.58925 &             &      0.19 \\
+   13  &      0.24254 &     0.58080 &             &      0.22 \\
+   14  &      0.24254 &     0.63681 &             &      0.26 \\
+   15  &      0.24254 &     0.67276 &             &      0.31 \\
+   16  &      0.24254 &     0.76358 &             &      0.39 \\
+   17  &      0.24254 &     0.78289 &             &      0.48 \\
+   18  &      0.25000 &     0.74582 &             &      0.64 \\
+   19  &      0.26726 &     0.75484 &             &      1.14 \\
+   20  &      0.26726 &     0.81215 &             &      1.71 \\
+   21  &      0.26726 &     0.78067 &             &      3.15 \\
+   22  &      0.28868 &     0.88552 &             &      5.77 \\
+   23  &      0.28868 &     0.86355 &             &      8.37 \\
+   24  &      0.30151 &     0.91232 &             &     13.46 \\
+   25  &      0.30151 &     0.86634 &             &     26.85 \\
+   26  &      0.30151 &     0.84667 &             &     48.06 \\
+   27  &      0.30151 &     0.87238 &             &     80.57 \\
+   28  &      0.30151 &     0.88873 &             &    126.43 \\
+   29  &      0.31623 &     0.88771 &             &    200.71 \\
+   30  &      0.31623 &     0.88201 &             &    307.96 \\
+\hline
+\end {tabular}
+\end {table}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection {An example with the program {\tt latl}}
+
+Figure \ref{lat1.dat} gives an example data file for the program {\tt latl}.
+The corresponding results appear in Table~\ref{lat1.tex}.
+To call the program and produce these results, type ``{\tt latl fish31}'',
+assuming that the data are in file ``{\tt fish31.dat}''.
+The results will be in file ``{\tt fish31.tex}'', which produces
+Table~\ref{lat1.tex} after going through \LaTeX.
+If {\tt TEX} was replaced by {\tt Terminal} in the data file,
+the results would rather be displayed on the screen.
+See the description of the program {\tt latl} for more details on how
+to set up the data files.
+Note that the first column in the data file gives the data values themselves,
+while the second column contains comments describing the meaning of these
+values.
+In that example, the Beyer and spectral tests are applied to
+the LCG of order 1 with $m = 2^{31}-1 = 2147483647$ and $a = 742938285$,
+suggested by Fishman and Moore \cite {rFIS86a}.
+The last column indicates the (cumulative) cpu time.
+The total cpu time to compute all the Beyer quotients $q_t$ and
+distances $d_t$ between hyperplanes in dimensions 2 to 30 was approximately
+308 seconds, i.e., approximately 5 minutes.
+Computing the Beyer quotients for this example turns out to be
+much more expensive than computing only the distances between the hyperplanes.
+For example, to compute only the $d_t$'s (and not the $q_t$'s)
+in dimensions 2 to 30, it takes less than 3 seconds on the same machine!
+We also computed $d_t$ and $q_t$ in dimensions 2 to 30 with formal
+verification using error bounds for all floating point numbers
+(see the module {\tt REDBAS2}).  This took approximately 15 minutes
+and the results were the same (except for the CPU times)
+as in Table~\ref{lat1.tex}.
+These times are representative of what happens in general for examples 
+of that size.
+The program {\tt lats} can also be applied to the same data file and the
+results will be the same, except for the cpu times.
+It takes more time to run, but it can accept much larger moduli
+and multipliers.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%  This is in file  seek15.dat
+%
+\setbox0=\vbox {\hsize = 6.0in
+\code\smallc
+
+ FALSE                           Read generators from file
+ 1                               J
+  MRG                             Gener. type
+  32749  1 0                      Modulo m
+  2                               Order k
+  TRUE                            Maximal period
+  FALSE                           Implem. condition
+  Decomp                          Factors of m-1
+  DecompWrite seek15r.fac         Factors of r
+  1                               b1
+  180                             c1
+  -180                            b2
+  -1                              c2
+  Exhaust                         Search method: exhaustive search
+ 1 3 8                           NbCat  Dim(0)  Dim(1)
+ 0.0  1.0                        Min and max merit values
+ 2                               Nb of retained generators
+ Spectral  Hermite               Merit criterion
+ Spectral                        Information to print
+ Full                            Lattice type (analyzed)
+ 1  1                            Lacunary ind. group sizes,  spacing
+ NoVerify                        Verify basis reduction with error bounds.
+ 1000000                         Max nb of nodes in each BB
+ 0.1                             Time limit: 0.1 hour
+ 12345 98765                     S1 S2 : seeds for random number generator
+ RES                             Results File
+
+\endcode }
+
+\begin{figure}[hbt] 
+\centerline {\boxit{\box0}}
+\caption { Example of a data file for the program {\tt seekl},
+           in file {\tt seek15.dat}. }
+\label {seekl1.dat}
+\end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%  This is in file  seek15.res
+%
+\setbox1=\vbox {\hsize = 5.0in
+\code\smallc
+ SEARCH FOR GOOD MRGs OF ORDER 2
+-----------------------------------------
+
+ DATA
+ ----
+   Modulus  m = 32749
+   Order    k = 2
+   n_j        = 1
+   rho_j = (m_j)^k_j-1 = 1072497000
+   Factors of m-1   :  Decomp 
+   Factors of r     :  DecompWrite seek15r.fac
+   Bounds : a1 from : 1
+                 to : 180
+            a2 from : -180
+                 to : -1
+   Search method                      : EXHAUST 
+   Implem. cond.  a_i (m mod a_i) < m : NO
+   Maximum period required            : YES
+
+   Merit criterion                    : M_8
+   Seeds for RNG                      : 12345,  98765
+   Verify Branch-and-bound            : NoVerify
+   Maximum nodes in branch-and-bound  : 1000000
+   Lattice Type                       : Full
+
+ RESULTS 
+ -------
+   Values of a2 tried                    :        180
+   Values of a2 primitive element        :         66
+   Polynomials with a2 primitive element :      11880
+   Primitive polynomials                 :       4638
+   Nb. of polynomials to examine         :      32400
+   Nb. Generators conserved              :          2
+   Total CPU time (after setup)          : 0:00:13.06
+ -----------------------------------------------------
+1. 
+   a_1 =              180
+   a_2 =             -176
+
+    t         d_t             q_t           S_t
+ -----------------------------------------------------
+    3      3.97223E-3                     0.21911
+    4      7.13449E-3                     0.65130
+    5         0.03511                     0.36151
+    6         0.03558                     0.68076
+    7         0.09285                     0.41035
+    8         0.09285                     0.56613
+
+   Merit =    0.21911  = S_3
+
+2. 
+   a_1 =              180
+   a_2 =             -175
+
+    t         d_t            q_t            S_t
+ -----------------------------------------------------
+    3      3.98327E-3                     0.21850
+    4      7.39990E-3                     0.62794
+    5         0.02824                     0.44953
+    6         0.03716                     0.65170
+    7         0.05717                     0.66649
+    8         0.07715                     0.68130
+
+   Merit =    0.21850  = S_3
+
+\endcode }
+
+\begin{figure}[hbt] 
+\centerline {\boxit{\box1}}
+\caption { Results of program {\tt seekl} in file {\tt seek15.res}. }
+\label {seekl1.res}
+\end{figure}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection {Examples with the programs {\tt seekl} and {\tt seeks}}
+
+Figure \ref{seekl1.dat} gives an example of a data file for {\tt seekl}.
+It will perform an exhaustive search among the 32400 generators of order
+$k=2$ with modulus $m= 32749$, $1\le a_1\le 180$, and $-180\le a_2\le -1$.
+The criterion is $M_8$.
+The two best generators
+will be retained, provided their values of $M_8$ are at least 0.2.
+The values of $m-1$ and $r$ will be decomposed by the program.
+The factors of $r$ will be written in file ``{\tt f2seek1.fac}'',
+while those of $m-1$ will not be kept.
+The results of that program appear in Figure~\ref{seekl1.res}
+(this is an actual printout, for illustration).
+
+Figure \ref{seeks2.dat} gives another data file example, this time
+for {\tt seeks}.
+It asks for a random search for good generators of order
+$k=5$ with modulus $m= 2^{63} - 711$, $1\le a_1\le 2^{63}-712$,
+$a_2 = a_3 = a_4 = 0$, $-2^{63}+712\le a_5\le -1$, for which
+$a_i (m\mod a_i) < m$ for $i=1,5$, and which have maximal period.
+The criterion is $S_8$.
+Only the best generator will be retained.
+The factorization of $m-1$ will be read in file ``{\tt seek63.fac}'' and
+$r$ is prime.
+For the random search, we will examine 1000 subregions of dimensions
+$(4\times 1\times 1\times 1\times 4)$, that is, a total of 16000 generators
+(4000 values of $a_5$), if time permits.
+We give the program a cpu time-limit of 3 hours.
+A partial view of the results file is given in Figure~\ref{seeks2.res}.
+The program reached the time-limit of 3 hours before examining
+all the generators it was asked for.
+It then stopped and reported the best generator it had found so far.
+
+Note that we are not recommending any of these particular generators.
+These examples are only to illustrate the capabilities of LatMRG.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%  This is in file  seek63.dat
+%
+\setbox0=\vbox {\hsize = 6.1in
+\code\smallc
+
+     FALSE                          ReadGenFromFile
+     1                              J
+      MRG                            TypeGen
+      2  63  -711                    m
+      5                              k
+      TRUE                           PerMax
+      TRUE                           ImplemCond
+      Read  seek63.fac               Factors of m-1
+      Prime                          Factors of r
+      1                              b_1
+      2  63  -712                    c_1
+      0                              b_2
+      0                              c_2
+      0                              b_3
+      0                              c_3
+      0                              b_4
+      0                              c_4
+      -2  63  -712                   b_5
+      -1                             c_5
+      Random 1000 4 4               Search: random, 1000 regions, H=4, Hk=4
+     1 6 12                         C  Dim(0)  Dim(1)
+     0.0  1.0                       Minimal and maximal merit values
+     1                              Nb of retained generators
+     Spectral       Hermite         Criterion
+     BeyerSpectral  Hermite         Information to print
+     Full                           Lattice type (analyzed)
+     1  1                           Lacunary ind. group sizes,  spacing
+     NoVerify                       Verify BB with error bounds
+     1000000                        Max nb nodes in each BB
+     3.0                            cpu time-limit (hours)
+     12345 98765                    S1 S2 : seeds for random number generator
+     RES                            Results File
+
+\endcode }
+
+\begin{figure}[hbt] 
+\centerline {\boxit{\box0}}
+\caption { Example data file for program {\tt seeks},
+           in file {\tt seek63.dat}. }
+\label {seeks2.dat}
+\end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%  This is in file  seek63.res
+%
+\setbox1=\vbox {\hsize = 5.5in
+\code\smallc
+
+ SEARCH FOR GOOD MRGs OF ORDER 5
+ ----------------------------------------
+
+ \vdots
+
+ RESULTS 
+ -------
+ ****  Program aborted: reached time limit.  **** 
+     There will be no verification of results.
+          time limit :       3.00 hour(s) 
+   Values of a5 tried                    :        277
+   Values of a5 primitive element        :        134
+   Polynomials with a5 primitive element :        536
+   Primitive polynomials                 :        103
+   Nb. Generators conserved              :          1
+
+   Total cpu time (after setup)          : 3:00:01.76
+ -----------------------------------------------------
+
+1. 
+   a1 = 53663276718
+   a2 = 0
+   a3 = 0
+   a4 = 0
+   a5 = -5144244197
+
+    t        d_t          q_t            S_t
+ -----------------------------------------------------
+    6     1.855E-11                   6.5589E-6
+    7     1.855E-11                   1.1384E-3
+    8     1.855E-11                     0.05347
+    9     2.991E-11              
+   10     3.360E-10              
+   11     2.6017E-9              
+   12     1.2892E-8              
+
+   Merit = 6.55894E-6  = S_6
+
+\endcode }
+
+\begin{figure}[hbt] 
+\centerline {\boxit{\box1}}
+\caption { Results of program {\tt seeks} in file {\tt seek63.res}. }
+\label {seeks2.res}
+\end{figure}
+
+\clearpage
+
+
+
+
+

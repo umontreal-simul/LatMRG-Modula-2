@@ -1,0 +1,280 @@
+\defmodule{MULTLI}
+
+This module offers basic tools to manipulate scalars, vectors and matrices
+used as multipliers for linear congruential (or multiple recursive) generators.
+They are represented using the {\tt LONGINT} type.
+Before calling any of the procedures with suffix {\tt Modm}, one must first
+call {\tt MSetm} to fix the value of the modulus {\tt m}.
+{\tt MaxPeriod} and {\tt PrimElem} can be used to verify the maximal period
+conditions for prime moduli given in Knuth \cite{rKNU81a}.
+Before calling these procedures, one must first call {\tt SetFactors}
+to give or compute the decomposition of $m-1$ and $r$.
+
+\bigskip\hrule
+\code
+
+DEFINITION MODULE MULTLI;
+
+FROM SUPINT  IMPORT SuperInteger;
+FROM SUPFACT IMPORT Factors;
+FROM CONFIG  IMPORT MDim;
+
+TYPE
+   MScal   = LONGINT;
+   MVect   = ARRAY MDim OF MScal;
+   MMatr   = ARRAY MDim OF MVect;
+
+VAR
+   MZero, MOne, MTwo : MScal;            (* Constants 0, 1, and 2.       *)
+
+PROCEDURE MCreateScal (VAR S : MScal);
+\endcode
+  \tab  Creates {\tt S}. (Is there for compatibility with {\tt MULTSI}.
+  Does nothing in the case of {\tt MULTLI}.) \endtab
+\code
+
+PROCEDURE MDeleteScal (VAR S : MScal);
+\endcode
+  \tab Deallocates the memory allocated to {\tt S} by a previous call to {\tt
+  MCreateScal}.\endtab
+\code
+
+PROCEDURE MCreateVect (VAR V : MVect; k1, k2 : MDim);
+\endcode
+  \tab  Creates entries of {\tt V}, using {\tt MCreateScal},
+  for indices {\tt k1}  to  {\tt k2} inclusive.
+  If  {\tt k2} is smaller than  {\tt k1}  then does nothing.\endtab
+\code
+
+PROCEDURE MDeleteVect (VAR V : MVect; k1, k2 : MDim);
+\endcode
+  \tab  Deallocates the memory  that was allocated for the creation of V,
+  of type {\tt MVect}, at a previous call to {\tt MCreateVect} with indices 
+  from {\tt k1}  to  {\tt k2} inclusive.
+  \endtab
+\code
+
+PROCEDURE MCreateMatr (VAR M : MMatr; k1, k2 : MDim);
+\endcode
+  \tab  Creates the elements of {\tt M}, as in {\tt MCreateVect}.\endtab
+\code
+
+PROCEDURE MDeleteMatr (VAR M : MMatr; k1, k2 : MDim);
+\endcode
+  \tab Deallocates the memory  that was allocated for the creation of M,
+  of type {\tt MMatr}, at a previous call to {\tt MCreateMatr} with parameters 
+  {\tt k1} and {\tt k2}.
+  \endtab
+\code
+
+PROCEDURE MReadScal (VAR S : MScal);
+\endcode
+  \tab  Reads {\tt S} from current intput file.
+  \endtab
+\code
+
+PROCEDURE MWriteScal (S : MScal);
+\endcode
+  \tab  Writes {\tt S} to current output file.
+  \endtab
+\code
+
+PROCEDURE MWriteScalBin (S : MScal);
+\endcode
+  \tab  Writes {\tt S} to current output file in binary form.
+  \endtab
+\code
+
+PROCEDURE MWriteVect (VAR V : MVect;  n : MDim);
+\endcode
+  \tab  Writes content of {\tt V} in current output file.
+  \endtab
+\code
+
+PROCEDURE MScalToLI (S : MScal) : LONGINT;
+\endcode
+  \tab  Returns the {\tt LONGINT} representation of {\tt S}.\endtab
+\code
+
+PROCEDURE MScalToLR (S : MScal) : LONGREAL;
+\endcode
+  \tab  Returns the {\tt LONGREAL} representation of {\tt S}.\endtab
+\code
+
+PROCEDURE MScalToSup (S : MScal;  T : SuperInteger);
+\endcode
+  \tab  Converts {\tt S} to the {\tt SuperInteger T} (which must have been
+   created before).\endtab
+\code
+
+PROCEDURE SupToMScal (T : SuperInteger;  VAR S : MScal);
+\endcode
+  \tab  Converts {\tt T} to the {\tt MScal S} (which must have been
+   created before).\endtab
+\code
+
+PROCEDURE LIToMScal (I : LONGINT;  VAR S : MScal);
+\endcode
+  \tab  Converts {\tt I} to the {\tt MScal S}.\endtab
+\code
+
+PROCEDURE MAffect (S : MScal;  VAR T : MScal);
+\endcode
+  \tab  Gives to {\tt T} the value of {\tt S}. \endtab
+\code
+
+PROCEDURE MEqual (S, T : MScal): BOOLEAN;
+\endcode
+  \tab  Returns {\tt TRUE} if {\tt S} is equal to {\tt T},
+  {\tt FALSE} otherwise.
+  \endtab
+\code
+
+PROCEDURE MGreater (S1, S2 : MScal): BOOLEAN;
+\endcode
+  \tab  Returns {\tt TRUE} if {\tt S1} is greater than {\tt S2},
+  {\tt FALSE} otherwise.
+  \endtab
+\code
+
+PROCEDURE MSmaller (S1, S2 : MScal): BOOLEAN;
+\endcode
+  \tab  Returns {\tt TRUE} if {\tt S1} is smaller than {\tt S2},
+  {\tt FALSE} otherwise.
+  \endtab
+\code
+
+PROCEDURE MChangeSign (VAR S : MScal);
+\endcode
+  \tab  Changes the sign of S. \endtab
+\code
+
+PROCEDURE MInc (VAR S : MScal; I : LONGINT);
+\endcode
+  \tab  Adds I to S.  The result is in S.  \endtab
+\code
+
+PROCEDURE MAdd (S1, S2 : MScal;   VAR T : MScal);
+\endcode
+  \tab  Adds {\tt S1} to {\tt S2} and puts the results in {\tt T}.\endtab
+\code
+
+PROCEDURE MSubtract (S1, S2 : MScal;   VAR T : MScal);
+\endcode
+  \tab  Subtracts {\tt S2} from {\tt S1} and puts the results in {\tt T}.\endtab
+\code
+
+PROCEDURE MAffectIdentMatr (VAR M : MMatr;  n : MDim);
+\endcode
+  \tab  Initializes {\tt M[1..n,1..n]} to the identity matrix.\endtab
+\code
+
+PROCEDURE MCopyVect (VAR U, V : MVect;  n : MDim);
+\endcode
+  \tab  Copies vector {\tt U}, of dimension {\tt n}, into vector {\tt V}.
+  \endtab
+\code
+
+PROCEDURE MCopyMatr (VAR M, N : MMatr;   n : MDim);
+\endcode
+  \tab  Copies matrix {\tt M}, of dimension {\tt n$\times$n}, into matrix {\tt N}.
+  \endtab
+\code
+
+PROCEDURE MModifVect (VAR U,V : MVect;   R : MScal; n : MDim);
+\endcode
+  \tab  Adds {\tt R} times the vector {\tt V} to the vector {\tt U}.
+  \endtab
+\code
+
+PROCEDURE MPowerLI (S : MScal;  i : LONGINT;  VAR R : MScal);
+\endcode
+   \tab  Returns $S^i$ in {\tt R}. \endtab
+\code
+
+PROCEDURE MMultiply (T, S : MScal;   VAR R : MScal);
+\endcode
+   \tab  Returns the product of {\tt T} by {\tt S} in {\tt R}.
+   \endtab
+\code
+
+PROCEDURE MQuotient (T, S : MScal;   VAR Q : MScal);
+\endcode
+   \tab  Returns the (truncated) quotient of {\tt T} by {\tt S} in {\tt Q}.
+   \endtab
+\code
+
+PROCEDURE MModulo (T, S : MScal;   VAR R : MScal);
+\endcode
+   \tab  Returns {\tt T} modulo {\tt S} in {\tt R}.
+   \endtab
+\code
+
+PROCEDURE MSetm (m : MScal);
+\endcode
+  \tab  Sets the value of the modulus {\tt m} which will be used from now on
+  in the procedures below.\endtab
+\code
+
+PROCEDURE MGetm (VAR m : MScal);
+\endcode
+  \tab  Returns in {\tt m} the value of the current modulus.\endtab
+\code
+
+PROCEDURE MProdModm (S, T : MScal;  VAR R : MScal);
+\endcode
+   \tab Returns in {\tt R} the product of {\tt S} by {\tt T} modulo {\tt m}.
+    Assumes that {\tt S} and {\tt T} are between {\tt -m} and {\tt m}.
+    \endtab
+\code
+
+PROCEDURE MProdScalModm (VAR U, V : MVect;   VAR Q, R : MScal;   n : MDim);
+\endcode
+   \tab Returns in {\tt R} the scalar product of {\tt U} by {\tt V}
+    modulo {\tt m}, using components {\tt 1}
+    to {\tt n} of these vectors.  {\tt Q} contains the quotient.\endtab
+\code
+
+PROCEDURE MModifVectModm (VAR U, V : MVect;  R : MScal;  n : MDim);
+\endcode
+  \tab  Adds {\tt R} times the vector {\tt V} to the vector {\tt U}.
+  \endtab
+\code
+
+PROCEDURE MPowerPolyMod (VAR A : MVect;  n : MDim;  q : MScal;  VAR R : MVect);
+\endcode
+   \tab Returns in {\tt R} the coefficients of the polynomial
+     $x^q \mod f(x) ~(\mod m)$,
+     where $f(x) = x^n - A_1 x^{n-1} -\cdots- A_n$.
+   \endtab
+\code
+
+PROCEDURE SetFactors (VAR ListmMS1, Listr : Factors;   k : MDim);
+\endcode
+   \tab Sets the factors of $m-1$ and $r ~[= (m^k-1)/(m-1)]$. If
+        {\tt ListmMS1} is {\tt NIL}, then the procedure will calculate and
+        return the factors of $m-1$. If not, then the procedure will take the
+        list of factors (see {\tt SUPFACT} of {\tt SENTIERS}) and verify if
+        they are factors of $m-1$. The program will stop if the product does
+        not give $m-1$. The same things are done with {\tt Listr} and
+        the factors of $r$.
+   \endtab
+\code
+
+PROCEDURE PrimElem (VAR A : MVect) : BOOLEAN;
+\endcode
+   \tab  Verifies a first condition for $f(x)$ to be primitive modulo $m$,
+    namely that $(-1)^{k-1} a_k$ is a primitive element modulo $m$.
+    Must have called {\tt SetFactors} before.
+   \endtab
+\code
+
+PROCEDURE MaxPeriod (VAR A : MVect) : BOOLEAN;
+\endcode
+   \tab  Verifies the remaining conditions for $f(x)$ to be primitive modulo
+    $m$, assuming that {\tt PrimElem} has returned {\tt TRUE}.
+   \endtab
+\code
+
+END MULTLI.
+\endcode

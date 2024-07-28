@@ -1,0 +1,36 @@
+\defmodule {lats}
+
+This is the same program as {\tt latl}, except that multipliers and
+bases are represented using the type {\tt SuperInteger}.
+(Modules {\tt MULTSI} and {\tt BASISSI} are used.)
+Therefore, it can deal with larger values of $m$ and $a_i$'s.
+
+\bigskip\bigskip
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\defmodule {latsr}
+
+Same as {\tt latl}, except that the multipliers
+are represented as {\tt SuperInteger}'s.
+(Modules {\tt MULTSI} and {\tt BASISLR} are used.)
+
+\bigskip\bigskip
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\defmodule {seeks}
+
+Same as {\tt seekl}, except that the multipliers and
+bases and represented as {\tt SuperInteger}'s.
+(Modules {\tt MULTSI} and {\tt BASISSI} are used.)
+
+\bigskip\bigskip
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\defmodule {seeksr}
+
+Same program as {\tt seekl}, except that multipliers
+are represented as {\tt SuperInteger}'s.
+(Modules {\tt MULTSI} and {\tt BASISLR} are used.)
+It can deal with larger values of $m$ and $a_i$'s than {\tt seekl},
+but the computations are less precise than with {\tt seeks}.
+
+\bigskip\bigskip
+\input streams
+

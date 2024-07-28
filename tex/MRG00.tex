@@ -1,0 +1,52 @@
+\defmodule{MRG00}
+
+\bigskip\hrule
+\code
+
+DEFINITION MODULE MRG;
+
+TYPE
+   LatticeType = (Full, Recurrent, Orbit, PrimePower);
+
+   MRGen =  POINTER TO InfoMRG;
+   InfoMRG = RECORD
+      Bas   : Basis;
+      M     : MScal;                    (* Modulus *)
+      Order : MDim;                     (* Order = k of the recurrence *)
+      aLR   : MULTLI.MVect;             (* Coefficients of the recurrence *)
+      aSI   : MULTSI.MVect;             (*               "                *)
+      D2,                               (* Square of the distances
+                                             between hyperplanes $d_t$ *)
+      S2,                               (* Square of $S_t$ *)
+      Q2                                (* Square of the Beyer quotients *)
+         : ARRAY DimProj OF BASISLR.BVect;
+      Merit : LONGREAL;                 (* Smallest figure of merit *)
+      DimMerit :BDim;                   (* Dimension with the smallest 
+                                           figure of merit *)
+      J     : IndexJ;                   (* Number of MRG components.
+                                           = 1 if a simple MRG *)      
+      Compo : ARRAY IndexJ OF MRGen; (* MRG components
+                       making up a combined MRG if J > 1 *)
+      END;
+
+   ListMRGen = POINTER TO InfoListMRG;
+   InfoListMRG = RECORD
+      Next : ListMRGen;
+      Gene : MRGen;
+      END;
+
+\endcode
+\iffalse
+   CombMRGen =  POINTER TO InfoCombMRG;
+   InfoCombMRG = RECORD
+      M     : MScal;
+      K     : MDim;
+      aSI   : BASISSI.MVect;
+      D2,
+      S2,
+      Q2    : BASISLR.BVect;
+      Merit : LONGREAL;
+      Compo : ARRAY IndexJ OF MRGen;
+      END;
+\fi
+

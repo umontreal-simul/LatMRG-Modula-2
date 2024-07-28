@@ -1,0 +1,88 @@
+\section {Making your own programs}
+\typeout {Section 3 ***}
+
+{\tt LatMRG} offers more flexibility than just providing a set of 
+executable programs.
+One can also use the modules provided to write one own's programs.  
+For that, a Modula-2 compiler and some knowledge about the Modula-2
+language are required.
+Instead of providing the parameters according to the format of
+Appendix A, one sets those parameters (or data) by setting the
+appropriate variables or calling the appropriate procedures from
+the intermediate or low-level modules.
+In this section, we introduce briefly the intermediate and low-level 
+modules, which are described in Appendix B and C, respectively.
+It is important to recall that the multiplier's and basis components
+can be implemented with different representations and that one must make
+sure to select the appropriate representation for the target application.
+See Section 3.2 for more details on this.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection {Using the modules of {\tt LatMRG}}
+
+The modules of {\tt LatMRG} (excluding the executable programs)
+have been classified in two sets: lower-level and intermediate-level.
+The lower-level modules offer basic facilities for arithmetic operations
+and conversions, with different representations, for basis vectors and
+multipliers.  They are described in Appendix C.
+
+The intermediate-level module {\tt MRG}
+constructs lattice bases for different classes
+of generators and perform tests on such generators.
+The modules {\tt LATBASIS}, {\tt REDBAS}, {\tt REDBAS2}, and {\tt REDBAS3}
+offer tools for manipulating lattice bases,
+finding the shortest vector in a lattice, and for reducing
+a basis in the sense of Minkowski.
+Those modules are described in Appendix B.
+The programs of Appendix A use those intermediate and lower-level modules
+in their implementation, and so, provide examples of how to use them.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection {Lower-level modules and Changing the representation}
+
+As discussed in Section 1.6, the multiplier's components can be implemented
+in the {\tt LONGINT} or {\tt SuperInteger} representation, while the basis
+components can be in the {\tt LONGREAL} or {\tt SuperInteger} representation.
+To select the appropriate representation (in modules {\tt MULT} and
+{\tt BASIS}, respectively), one should use the command
+{\tt select} (see Appendix C), set the environment variable LILR,
+ and recompile all the modules.
+
+Generally speaking, the proper choice of representation
+depends on the size of the mo\-du\-lus $m$. 
+For example, if the modulus is less than $2^{31}$, one can type
+{\tt select LI LR} (although it could sometimes happen that vector components
+get larger than the modulus).
+For large moduli, type {\tt select SI SI}.
+See the description of the command {\tt select} for more details on its use.
+After changing the representation, one must recompile the modules. 
+Calling one of the command {\tt lilr, silr, sisi} in a shell will
+set the environment variable LILR corresponding to the particular case
+of  {\tt select}. (See also the file {\tt Makedoc.tex}.) This is
+necessary in order to link with the appropriate libraries.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection {Modifying the package, recompiling, and relinking}
+
+After calling {\tt select}, or after modifying the code of a module,
+one must recompile and relink. 
+\iffalse  Some systems
+%%  (e.g., {\em TopSpeed Modula-2\/} on MS-DOS or OS/2)
+provide automatic make facilities, which recompile all the modified
+modules in the correct order and relink appropriately.
+We have written a {\tt Makefile} to facilitate the compiling and
+linking of programs which use the lower-level modules of {\tt LatMRG}.
+Just type {\tt make} and the name of your program,
+and all the modules needed will be recompiled.
+See the {\tt Makefile} for more details.
+%%  To recompile all the modules except those in executable form,
+%%  just type {\tt make all}.
+ %%%%%%%%%%%%
+There are also two macros, {\tt debug} and {\tt optim} in the makefile,
+to add arguments to the compiler and linker commands.
+This is useful, for example,
+to select the level of object-code optimization:
+for full optimization, use the command `{\tt make "optim=-O3"}' and the
+name of your program.
+\footnote { Est-ce encore valide ? }
+\fi  %%%%%%%%%

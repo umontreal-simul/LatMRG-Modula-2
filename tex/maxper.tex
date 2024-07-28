@@ -1,0 +1,34 @@
+\defmodule {maxper}
+
+This program verifies whether a given generator has maximal period or not.
+Integers are represented using the {\tt SuperInteger} type.
+The modulus $m$ must be prime.
+To verify the maximal period conditions, the factorizations of $m-1$ and
+$r = (m^k-1)/(m-1)$ are required.  They can be found by the program
+or provided by the user in a file.
+We warn that factoring $r$ can take a {\em huge} amount of time.
+
+The data for {\tt maxper} must be placed in a file with extension
+``{\tt .dat}'', according to the format displayed in Figure~\ref{maxper.dat}.
+The data fields have the same meaning as for {\tt latl}.
+To run the program, type ``{\tt maxper \em\<file\>}'', 
+where {\em\<file\>} is the name of the data file, without extension.
+Currently, only {\tt LCG} and {\tt MRG} are allowed for {\em TypeGen}.
+
+%%  DATA FILE  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\setbox0=\vbox {\hsize=12.0cm \setverbatim\it\baselineskip=13pt
+
+           TypeGen
+           $m$
+           $k$
+           $F1$ $[$\<file1\>$]$
+           $F2$ $[$\<file2\>$]$
+           $a_1$
+           \vdots
+           $a_k$
+
+}
+\begin{figure}[h] \centerline {\boxit{\box0}}
+\caption { Data file format for {\tt maxper}. }  \label {maxper.dat}
+\end{figure}
+

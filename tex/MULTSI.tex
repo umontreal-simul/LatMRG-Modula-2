@@ -1,0 +1,75 @@
+\defmodule{MULTSI}
+
+Same as {\tt MULTLI}, except that the values are
+represented using the {\tt SuperInteger} type, and that {\tt MCreateScal},
+{\tt MCreateVect}, and {\tt MCreateMatr} are required to create the 
+{\tt SuperInteger}s.  The initial memory space (in words) allocated 
+for the digits of the {\tt SuperInteger}s thus created is 2 to the power
+{\tt MSizeSI} (currently 4 words). (See {\tt Create} in {\tt SUPINT}).  
+\bigskip
+\hrule
+\code
+
+DEFINITION MODULE MULTSI;
+
+FROM SUPINT  IMPORT SuperInteger;
+FROM SUPFACT IMPORT Factors;
+FROM CONFIG  IMPORT MMaxDim, MDim;
+
+TYPE
+   MScal   = SuperInteger;
+   MVect   = ARRAY MDim OF MScal;
+   MMatr   = ARRAY MDim OF MVect;
+
+
+VAR
+   MZero, MOne, MTwo : MScal;          (* These should be constants      *)
+
+
+PROCEDURE MCreateScal (VAR S : MScal);
+PROCEDURE MDeleteScal (VAR S : MScal);
+PROCEDURE MCreateVect (VAR V : MVect; k1, k2 : MDim);
+PROCEDURE MDeleteVect (VAR V : MVect; k1, k2 : MDim);
+PROCEDURE MCreateMatr (VAR M : MMatr; k1, k2 : MDim);
+PROCEDURE MDeleteMatr (VAR M : MMatr; k1, k2 : MDim);
+PROCEDURE MReadScal (VAR S : MScal);
+PROCEDURE MEqual (S, T : MScal): BOOLEAN;
+PROCEDURE MGreater (S1, S2 : MScal): BOOLEAN;
+PROCEDURE MSmaller (S1, S2 : MScal): BOOLEAN;
+PROCEDURE MChangeSign (S : MScal);
+PROCEDURE MInc (VAR S : MScal; I : LONGINT);
+PROCEDURE MAdd (S1, S2 : MScal; VAR S3 : MScal);
+PROCEDURE MSubtract (S1, S2 : MScal;  VAR S3 : MScal);
+PROCEDURE MWriteScal (S : MScal);
+PROCEDURE MWriteScalBin (S : MScal);
+PROCEDURE MWriteVect (VAR V : MVect;  n : MDim);
+PROCEDURE MScalToLI (S : MScal) : LONGINT;
+PROCEDURE MScalToLR (S : MScal) : LONGREAL;
+PROCEDURE MScalToSup (S: MScal; T : SuperInteger);
+PROCEDURE LIToMScal (I : LONGINT;  VAR S : MScal);
+PROCEDURE MAffect (S : MScal;  VAR T : MScal);
+PROCEDURE MAffectIdentMatr (VAR M : MMatr;  n : MDim);
+PROCEDURE MCopyVect (VAR U, V : MVect;  n : MDim);
+PROCEDURE MCopyMatr (VAR M, N : MMatr; n : MDim);
+PROCEDURE MModifVect (VAR U,V : MVect; R : MScal; n : MDim);
+PROCEDURE MPowerLI (S : MScal;  i : LONGINT;  VAR R : MScal);
+PROCEDURE MMultiply (T, S : MScal;   VAR  R : MScal);
+PROCEDURE MQuotient (T, S : MScal;   VAR  Q : MScal);
+PROCEDURE MModulo (T, S : MScal;   VAR  R : MScal);
+PROCEDURE MSetm (m : MScal);
+\endcode 
+\code
+PROCEDURE MGetm (VAR m : MScal);
+PROCEDURE MProdModm (S, T : MScal;  VAR R : MScal);
+PROCEDURE MProdScalModm (VAR U, V : MVect;  VAR a, R : MScal;   n : MDim);
+\endcode 
+\code
+PROCEDURE MModifVectModm (VAR U,V : MVect; R : MScal; n : MDim);
+PROCEDURE MPowerPolyMod (VAR A : MVect; n : MDim; q : MScal; VAR R : MVect);
+PROCEDURE SetFactors (VAR ListmMS1, Listr : Factors; k : MDim);
+\endcode
+\code
+PROCEDURE PrimElem (VAR A : MVect) : BOOLEAN;
+PROCEDURE MaxPeriod (VAR A : MVect) : BOOLEAN;
+END MULTSI.
+\endcode

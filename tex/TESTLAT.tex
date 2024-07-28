@@ -1,0 +1,291 @@
+\defmodule{TESTLAT}
+
+This module offers a procedure to test several projections of the lattice specified by a modulus 
+and  a set of generating vectors.  Several categories of projections can be considered, with 
+specific projections in each category.  All these parameters are specified via 
+{\tt InitTestConfig}, stored in a {\tt TestConfig} structure which is passed to the
+{\tt TestLattice} procedure.
+
+
+\bigskip\hrule
+\code
+
+DEFINITION MODULE TESTLAT;
+
+FROM BASIS    IMPORT BVect;
+FROM MULT     IMPORT MScal, MVect;
+FROM CONFIG   IMPORT MDim, BDim, DimProj, MCoord, Categ, OutputType;
+FROM NORM     IMPORT CriterionType, Normaliz, NormType, GammaType;
+FROM LATBASIS IMPORT Basis;
+FROM REDBAS   IMPORT VerifyType;
+IMPORT BASISLR;
+
+
+TYPE
+   CoordSet = SET OF MCoord;
+
+   TestConfig = POINTER TO InfoTestConfig;
+   InfoTestConfig = RECORD
+      m             : MScal;
+\endcode
+\tabbb
+  The modulus.
+\endtabbb
+\code
+
+      k             : MDim;
+\endcode
+\tabbb
+  Number of generating vectors (usually equal to the order of the
+  linear recurrence).
+\endtabbb
+\code
+
+      NbCoord       : MCoord;
+\endcode
+\tabbb
+  Total number of coordinates that are considered.
+\endtabbb
+\code
+
+      Maxds         : BDim;
+      Maxdp         : DimProj;
+\endcode
+\tabbb
+  {\tt Maxds} is the maximum dimension of the projections over successive 
+  coordinates.
+  {\tt Maxdp} is the maximum dimension of the projections over nonsuccessive
+  coordinates.
+  These are the values used for memory allocation in {\tt InitTestConfig}.
+\endtabbb
+\code
+
+      NbCats, C     : Categ;
+\endcode
+\tabbb
+  Number of categories (or lists) that are considered.
+  The variable {\tt C} is initially set to {\tt NbCats} by {\tt TestLattice},
+  and is decreased when the generator is not good enough for the 
+  category currently considered.
+\endtabbb
+\code
+
+      DimenProj     : ARRAY Categ OF BDim;
+      RangeProj     : ARRAY Categ OF ARRAY DimProj OF BDim;
+      DimRegLag     : ARRAY Categ OF BDim;
+      RangeRegLag   : ARRAY Categ OF ARRAY DimProj OF BDim;
+\endcode
+\tabbb
+   These arrays specify which projections are considered for each category.
+   {\tt DimenProj[c]} is the maximum number of dimensions for which the
+   projections over non-successive and non-regular indices are considered.
+   (E.g., if the value is 3, the pairs and triples are considered.)
+   For $j>1$, {\tt RangeProj[c,j]} indicates the maximal value of $i_j+1$
+   that is considered for $j$-dimensional projections in category $c$,
+   assuming that $i_1=0$.  For $j=1$, it gives the maximum dimension for
+   the successive dimensions, for category $c$.
+   Non-successive indices that are regularly spaced, i.e., where
+   $i_j = (j-1)s$ for some $s$, are also considered.
+   For category $c$, {\tt DimRegLag[c]} gives the maximum value of $s$
+   and {\tt RangeRegLag[c,s]} gives the maximum value of $j$ (number
+   of dimensions) that is considered for this $s$.
+\endtabbb
+\code
+
+      Mins2, Maxs2  : ARRAY Categ OF LONGREAL;
+\endcode
+\tabbb
+   For each category $c$, gives the minimum and maximum value of the 
+   worst-case criterion within category $c$ for a generator to be 
+   considered for category $c$ and the categories above it.
+   Whenever {\tt ValCrit[c]} is outside the range
+   [{\tt Mins2[c], Maxs2[c]}], the corresponding generator need not be
+   considered any longer for all the categories $c'\ge c$.
+   It may still be considered, however, for the categories $c'<c$.
+\endtabbb
+\code
+
+      InvertL, InvertS : BOOLEAN;
+\endcode
+\tabbb
+   Indicates if we want to print the multiplicative inverses of
+   the length of the shortest vector and/or the figure of merit {\tt S2}.
+   For the spectral test with the Euclidean norm, for instance, 
+   if {\tt InvertL = TRUE}, we obtain the distance between hyperplanes
+   instead of the length of the shortest vector.
+   Default values are {\tt FALSE}.
+\endtabbb
+\code
+
+      Criterion     : CriterionType;
+\endcode
+\tabbb
+   Indicates which criterion is used. 
+\endtabbb
+\code
+
+      Normal        : Normaliz;
+\endcode
+\tabbb
+   {\tt Normal} specifies the normalization method
+   used to compute {\tt S2}.
+\endtabbb
+\code
+
+      Verify        : VerifyType;
+\endcode
+\tabbb
+   Indicates the level of verification (i.e., {\tt REDBAS2} or
+   {\tt REDBAS3} is used).
+\endtabbb
+\code
+
+      Output        : OutputType;
+\endcode
+\tabbb
+   Indicates what kind of output is written during the test.
+\endtabbb
+\code
+
+      MasterGen     : ARRAY MDim OF ARRAY MCoord OF MScal;
+\endcode
+\tabbb
+  {\tt MasterGen} contains an initial set of $k$ generating vectors
+  for all the {\tt NbCoord} coordinates that are to be considered in the 
+  projections.
+  The projections of these vectors, obtained by selecting the 
+  appropriate columns in {\tt MasterGen}, together with additional vectors
+  of the form $(\dots, m, \dots)$, are used to build the triangular
+  bases in {\tt TBas}.
+\endtabbb
+\code
+
+      TBas          : Basis;
+\endcode
+\tabbb
+  Contains a triangular version of the basis
+  for the {\tt d} coordinates that are currently under consideration.
+  Used by the {\tt TestProjections} procedure.
+\endtabbb
+\code
+
+      RBas          : ARRAY DimProj OF Basis;
+\endcode
+\tabbb
+  {\tt RBas[d]} contains a reduced basis
+  for the {\tt d} coordinates that are currently under consideration.
+  This is used by the {\tt TestProjections} procedure, which goes
+  back and forth in this array while exploring the tree of projections.
+  {\tt RBas[0]} is used for the lattices that correspond to successive
+  coordinates.
+  
+\endtabbb
+\code
+
+      L2, S2        : ARRAY DimProj OF BASISLR.BVect;
+\endcode
+\tabbb
+   The vector {\tt L2} will contain the lengths of the shortest vectors 
+   raised to the power $p$ in case of the spectral test with the 
+   $\cL_p$ norm.  More precisely, {\tt L2[1,t]} is the value for the
+   lattice that corresponds to successive coordinates in $t$ dimensions,
+   whereas {\tt L2[d,t]}, for $d>1$, is the worst value for all the 
+   $d$-dimensional projections over coordinate sets $I = \{i_1,\dots,i_d\}$
+   where $i_1=0$ and $i_d=t-1$.  In all cases,   
+   {\tt S2[d,t]} will contain the corresponding normalized quantity,
+   also raised to the power $p$, or the Beyer quotient in case of the 
+   Beyer test.
+\endtabbb
+\code
+
+      ValCrit : ARRAY Categ OF LONGREAL;
+\endcode
+\tabbb
+   {\tt ValCrit[c]} will contain the worst-case value of the figure 
+   of merit in {\tt S2[d,t]} over the set of projections that are considered
+   for category {\tt c}.
+\endtabbb
+\code
+
+      OK : BOOLEAN;
+\endcode
+\tabb
+   Indicates if the last operation (e.g., call to {\tt TestLattice,
+   SpectralTest}, etc.) has been successful.
+\endtabb
+\code
+      END;
+
+
+
+PROCEDURE CreateTestConfig (VAR T : TestConfig);
+\endcode
+  \tab  
+  Creates the structure {\tt T}.  One must then call
+  {\tt InitTestConfig} to allocate memory for the elements of
+  {\tt MasterGen, TBas, RBas, L2}, and {\tt S2}.
+  \endtab
+\code
+
+PROCEDURE DeleteTestConfig (VAR T : TestConfig);
+\endcode
+  \tab  
+  Deletes the structure {\tt T}, after deallocating the memory
+  allocated to its fields by {\tt InitTestConfig}.
+  \endtab
+\code
+
+PROCEDURE InitTestConfig 
+  ( T : TestConfig;  Norm : NormType;
+    m  : MScal;   k  : MDim;      NbCoord : MCoord;  
+    ds : BDim;    dp : DimProj;   NbCats  : Categ;
+    gamma : GammaType;   beta : LONGREAL
+  );
+\endcode
+  \tab
+  Initializes the structure {\tt T}.
+  In the parameters, {\tt m} represent the modulus, {\tt k} the number of
+  generating vectors, 
+  {\tt NbCoord} the total number of coordinates to be considered,
+  {\tt ds} the maximum dimension of the projections over successive 
+  coordinates,
+  {\tt dp} the maximum dimension of the projections over nonsuccessive
+  coordinates,
+  and {\tt NbCats} the number of categories.
+  This procedure creates the elements of {\tt MasterGen[1..k, 1..NbCoord]},
+  {\tt L2}, and {\tt S2},
+  creates the bases {\tt TBas} and {\tt RBas[0..d]},
+  initializes their sizes appropriately, their modulus to $m$,
+  and their {\tt Norm} field to {\tt Norm}.
+  The parameters {\tt gamma {\rm and} beta} are used to initialize {\tt
+  T\^{}.Normal} by calling {\tt InitNormaliz}.
+  \endtab
+\code
+
+PROCEDURE AddToBasis (T : TestConfig;  d : BDim;  Ind : CoordSet;  n : BDim);
+\endcode
+  \tab
+  Assumes that {\tt MasterGen} has been initialized to a proper set
+  of generating vectors.
+  Adds a vector to the basis {\tt TBas} that corresponds to adding 
+  the $j$th coordinate of the generating vectors, and updates the dual.
+  \endtab
+\code
+
+PROCEDURE RemoveFromBasis (T : TestConfig; d : BDim;  Ind : CoordSet; n : BDim);
+\endcode
+  \tab
+  Removes from the basis {\tt TBas} the vector that corresponds to the 
+  $j$th coordinate, and updates the dual.
+  \endtab
+\code
+
+PROCEDURE TestLattice (T : TestConfig);
+\endcode
+ \tab  Applies the tests specified by {\tt T} to the lattice
+   whose set of generating vectors is in its field \verb=MasterGen=.
+ \endtab
+\code
+
+END TESTLAT.
+\endcode

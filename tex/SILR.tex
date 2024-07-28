@@ -1,0 +1,51 @@
+\defmodule{SILR}
+
+Procedures to convert between {\tt SuperInteger} (multipliers) and
+{\tt LONGREAL} (elements of basis vectors).
+Similar to {\tt LILR}.
+
+\bigskip\hrule
+\code
+
+DEFINITION MODULE SILR;
+
+FROM SUPINT  IMPORT SuperInteger;
+FROM MULTSI  IMPORT MScal;             (* SuperInteger.                   *)
+FROM BASISLR IMPORT BScal;             (* LONGREAL.                       *)
+
+PROCEDURE MScalToBScal (S : MScal;   VAR R : BScal);
+\endcode
+  \tab  Converts {\tt S} to {\tt R}
+   (from {\tt SuperInteger} to {\tt LONGREAL}).\endtab
+\code
+
+PROCEDURE BScalToMScal (S : BScal;   VAR R : MScal);
+\endcode
+  \tab  Converts {\tt S} to {\tt R}
+   (from {\tt LONGREAL} to {\tt SuperInteger}).\endtab
+\code
+
+PROCEDURE SupToBScal (S : SuperInteger;   VAR R : BScal);
+\endcode
+  \tab Converts {\tt S} to {\tt R}
+   (from SuperInteger to {\tt LONGREAL}).\endtab
+\code
+
+PROCEDURE SupToMScal (S : SuperInteger;   VAR R : MScal);
+\endcode
+  \tab Copies {\tt S} to {\tt R}.\endtab
+\code
+
+PROCEDURE BScalToSup (S : BScal;   R : SuperInteger);
+\endcode
+  \tab Converts {\tt S} to {\tt R}
+   (from {\tt LONGREAL} to SuperInteger).\endtab
+\code
+
+PROCEDURE MScalToSup (S : MScal;   R : SuperInteger);
+\endcode
+  \tab Copies {\tt S} to {\tt R}.\endtab
+\code
+
+END SILR.
+\endcode

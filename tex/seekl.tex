@@ -1,0 +1,597 @@
+\defmodule {seekl}
+
+(To be rewritten....)
+
+This program performs a search for the ``best'' (or ``worst'') multiple
+recursive generators or multiply-with-carry generators of a given
+form, based on one of the criteria $Q_T$ or $M_T$ defined in Section 1.3
+It produces a report listing the retained generators, their properties,
+and various statistics on the search.
+
+The set of dimensions in which the test is applied can be partitioned
+into a certain number of intervals, or categories,
+and one can use a different selection criterion for the generators within
+each category.  One can also impose bounds on the figure of merit
+within each category.  See the data fields for $C$, {\it MinMerit}
+and {\it MaxMerit\/} below.
+For example, one can consider only the generators with $M_8 \ge 0.6$,
+and among these, retain the list of generators with the {\em smallest\/}
+value of $M_{12}$.
+As another example, one can retain the 2 generators with the highest $M_8$,
+the 2 generators with the highest $M_{16}$ and the eight generators
+with the highest $M_{32}$.
+
+One can search for combined MRGs with $J$ components, or simple MRGs $(J=1)$,
+or multiply-with-carry (MWC) generators.
+For a MWC, one simply analyzes the corresponding LCG, which is a special
+case of an MRG.  Therefore, in what follows, we use the term
+`MRG component' to denote either and MRG or a MWC.
+For a simple MRG (or for each component, in case $J > 1$), with
+given modulus $m$ and order $k$, the program searches for vectors
+of multipliers inside the
+region bounded by the vectors $b = (b_1,\dots,b_k)$ and $c = (c_1,\dots,c_k)$
+such that $-m < b_i\le c_i < m$ for each $i$.
+The search can be exhaustive in that region, or random.
+One can search only among maximal period generators (for each component),
+or not consider the period and examine only the lattice structure.
+The former (checking maximal period conditions) can be done only
+if $m$ is prime, or if $k=1$ and $m$ is a power of a prime.
+The program can also list the retained generators in a file, in a format
+more compact than for the result file, and can re-use that file as input
+to the program, in a later run.
+This could be useful, for example, if one wishes to perform first a screening
+over a large region, based on a criterion that does not require expensive
+computations, and then do a second pass over the retained generators,
+based on a more stringent criterion, such as looking at the lattice structure in
+higher dimensions, and/or verifying the results by performing all computations
+using error bounds.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection* {Method of search}
+
+For an exhaustive search for MRGs, all vectors of multipliers
+of the form $a = (a_1,\dots,a_k)$
+such that $b_i\le a_i\le c_i$ for $i=1,\dots,k$ will be examined, for
+a total of $N_v = \prod_{i=1}^k (c_i-b_i+1)$ vectors.
+This holds for each component.
+Therefore, if there are $J$ components and $N_{v,j}$ vectors are
+examined for component $j$, then a total of $\prod_{j=1}^J N_{v,j}$
+generators are examined.
+
+For a random search for MRGs, we fix a number of subregions (clusters)
+we want to examine, and the size $h_i$ of each subregion in dimension $i$,
+for $i=1,\dots,k$.  The program will examine a total of
+$n\prod_{i=1}^k h_i$ vectors of multipliers (for each MRG component)
+by repeating $n$ times the following:
+% \begin {verse}
+  For $i=1,\dots,k$, generate $\alpha_i$ randomly, uniformly over the set
+  $\{b_i,\dots,c_i-h_i+1\}$;  then, examine all the vectors
+  $a = (a_1,\dots,a_k)$ such that $\alpha_i\le a_i\le \alpha_i+h_i-1$
+  for each $i$.
+% \end {verse}
+
+When examining a vector $a$, the program first checks if the maximal
+period conditions are satisfied, if this is required.
+For prime modulus $m$, the condition (a) (see Section 1.2) is verified
+only once for each distinct value of $a_k$ (which corresponds to
+$\prod_{i=1}^{k-1} h_i$ different vectors).
+To verify the maximal period conditions, the factorizations of $m-1$ and
+$r = (m^k-1)/(m-1)$ are required.  They can be found by the program,
+if desired, or provided by the user in a file (see below).
+We recall that factoring $r$ can take {\em huge} amounts of time.
+So, avoid redoing the factorization unnecessarily.
+For the MRGs, these factorizations are necessary only when $m$ is
+prime and maximal period is required.
+
+If $a$ is not rejected by the maximal period test, then we move forward
+to the next MRG component and try all the vectors for that next component
+(by exhaustive or random search) and examine their combination with
+the currently examined multipliers for the previous components.
+For each combined generator, the values of $d_t$ and/or $q_t$ are 
+computed for dimensions $k+1,\dots,T$.  
+
+The program always keeps lower and upper bounds
+on the figure of merit ($M_T$ or $Q_T$), in each dimension,
+for the generator to be worth considering.  
+The initial values of these bounds are given by the user
+in the fields {\em MinMerit} and {\em MaxMerit}.
+The lower bound can be 0.0 and the upper bound can be 1.0, 
+which means that there can be no effective bounds for some
+categories if desired.
+
+As soon as a generator has a figure of merit below the lower
+bound in a given dimension, or above the upper bound for its
+category (after the computations for all the dimensions in this
+category have been completed), then this generator is immediately
+discarded and no further computations are made for it.
+This can save enormous amounts of time in the case of very large
+searches up to high dimensions, because with good bounds,
+few generators will reach the large dimensions.
+
+During execution, only the bounds for the last category can be
+modified.  If the figure of merit for the last category is to be
+{\em maximized\/}, when we have found enough (i.e., {\em NbGen($C$)})
+generators with a figure of merit $\ge \sigma$, where $\sigma$
+is larger than the lower bound for the last category, then we raise
+this lower bound to $\sigma$.
+Similarly, if we minimize in the last category, we can lower 
+the upper bound when we have enough generators beating the bound.
+In the case where the figure of merit is to be {\em maximized in 
+all\/} the categories, then a generator is also discarded
+as soon as its figure of merit in {\em any\/} dimension gets below 
+the lower bound of the last category.
+
+In the case where the selection criterion is {\tt Spectral} or
+{\tt SpectralH}, and if $T>8$, the distances between
+hyperplanes are computed for dimensions up to $T$, but the selection of
+generators is based only on $M_{8}$, because the Hermite constants
+defining $d_t^*$ in that case are known only for $t\le 8$.
+
+The execution (cpu) time is checked before testing each new generator.
+When it exceeds the cpu time limit given in the data file,
+the search is aborted and the partial results are printed.
+
+%%  DATA FILE  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\setbox0=\vbox {\hsize=12.0cm \it \begin {tabular}{l}
+           ReadGenFile ~$[$\<file0\>$]$ \\
+           $J$ \\
+           $\left.\begin {array}{l}
+           \mbox {TypeGen} \\
+           m \\
+           k \\
+           w \\
+           \mbox {PerMax} \\
+           \mbox {ImplemCond} ~[\mbox{\<NbMaxBits ~HighestBit\>}] \\
+           F1 ~[\mbox{\<file1\>}] \\
+           F2 ~[\mbox{\<file2\>}] \\
+           b_1 \\
+           c_1 \\
+           \vdots \\
+           b_k \\
+           c_k \\
+           \mbox {SearchMethod $[$n H $H_k]$ } \\
+           \end {array} \ \ \ \right\} \mbox { (Repeat $J$ times) }$ \\
+           $C$ \\
+           NbGen$(1)$ MinMerit$(1)$ MaxMerit$(1)$ 
+                $d_1$ $t_{11}$ $\cdots$ $t_{1,d_1}$ \\
+           \vdots \\
+           NbGen$(C)$ MinMerit$(C)$ MaxMerit$(C)$ 
+                $d_C$ $t_{C1}$ $\cdots$ $t_{C,d_C}$ \\
+           Criterion  ~\<{\em Invert\/}\> ~\<{\em Norm\/}\> \\
+           LatticeInfo \\
+           LatticeType \\
+           LaGroupSizes ~Spacing\\
+           VerifyBB \\
+           MaxNodesBB \\
+           TimeLimit \\
+           $S1 ~S2$ \\
+           ResultForm \\
+\end {tabular}
+}
+\begin{figure}[htb] \centerline {\boxit{\box0}}
+\caption { Data file format for {\tt seekl}. }  \label {seekl.dat}
+\end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection* {The data file}
+
+The data for {\tt seekl} must be placed in a file with extension
+``{\tt .dat}'', according to the format displayed on Figure~\ref{seekl.dat}.
+The fields in square brackets are optional (depending on the value taken
+by the first field on the line).
+The meaning of all data fields is explained below.
+To run the program, type ``{\tt seekl \<\em file}\>'', where \<{\em file}\> is
+the name of the data file, without extension.
+The results will be in a file with the same name, with extension
+``{\tt .res}'' or ``{\tt .gen}'' (see {\em ResultForm\/}).
+
+Comments may be inserted after data, on the same line,
+separated from the data by at least one blank. 
+Moreover, any line starting with ``\%'' or ``\#'' is considered
+as a comment.
+
+The values of $m$, $b_i$, and $c_i$ in the data file can be given in one
+of the two following formats:
+\vspace {-10pt}
+\begin {itemize}
+\item [a)]  An integer giving the value directly, in base 10.
+  In this case, there {\em must\/} be some other non-numeric text 
+  (e.g., a comment) on this data line after the integer.
+\item [b)]  Three integers $x$, $y$, and $z$ on the same line, separated
+  by at least one blank.  The retained value will be $x^y+z$ if $x\ge0$, and
+  $-((-x)^y+z)$ if $x<0$.  The value of $y$ must be positive.
+  For example, $(x\ y\ z) = (2\ 5\ -1)$ will give 31, while
+  $(x\ y\ z) = (-2\ 5\ -1)$ will give $-31$ (not $-33$).
+\end {itemize}
+For the program {\tt seekl}, all these numbers must fit in a {\tt LONGINT}.
+For larger numbers, one must use the program {\tt seeks}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection* {Meaning of the data fields}
+
+\begin {description}
+%
+\item [{\em ReadGenFile} and \<{\em file0}\> :]
+  {\tt BOOLEAN} and file name (without extension).
+  When {\em ReadGenFile} is {\tt FALSE},
+  the search is made according to the values of the fields below.
+  When {\tt TRUE}, the generators to be looked at are those
+  listed in the file \<{\em file0}\>{\tt .gen}.
+  This must be a file of type ``{\tt .gen}'', produced by this program
+  with the {\tt GEN} option for the {\em ResultForm} data field.
+  In that case, only those generators listed in that file are examined
+  and the vectors $b$ and $c$ below are not used.
+%
+\item [{\em J} :]
+  Number of components in the combined generators.
+  Must be an integer in the range $[1..{\tt MaxJ}]$.
+  When $J > 1$, we look for combined generators.
+%
+\item [{\em TypeGen} :] Can be:
+  \begin {description}
+  \item [{\tt MRG}] means that this component is an MRG.
+  \item [{\tt MWC}] means that this component is a multiply-with-carry 
+    (MWC) generator.
+    Each MWC generator is converted by the program to its
+    corresponding LCG (see, e.g., \cite{rCOU97a,rLEC98a}).
+  \item [{\tt MMRG}] means a matrix MRG.
+  \end {description}
+%
+\item [{\em m, k}, \<{\em w}\> :]
+  Modulus, order of the recurrence, and size of the matrix-type 
+  coefficients.
+  Must be positive integers, with $k<$ {\tt MMaxDim}.
+  For $m^k >= 2^{31}$, use the program {\tt seeks} instead of {\tt seekl}.
+  The value of $w$ should be specified only for MMRG generators.
+  Otherwise it is assumed to be 1.
+%
+\item [{\em Permax} :]
+  {\tt BOOLEAN} variable.  
+  {\tt TRUE} if maximal period is required, {\tt FALSE} otherwise.
+  When set to {\tt TRUE}, $m$ must be expressed in the data file in the
+  form (b): $(x\ y\ z)$, otherwise {\em Permax\/} will be put back to
+  {\tt FALSE}.  The software assumes that $m$ is prime, 
+  unless $z=0$ and $y > 1$, in which case it assumes that $x$ is prime.
+  In the latter case, one must have $k=1$, otherwise {\em Permax\/}
+  will be set back to {\tt FALSE}.
+%
+\item [{\em ImplemCond} and \<{\em NbPow2 ~HighestBit}\> :]
+  Can be {\tt NoCond}, {\tt AppFact}, or {\tt SumPow2}.
+  If {\tt NoCond}, then no conditions are imposed on the
+  multipliers $a_i$.
+  If {\tt AppFact}, then the multipliers must satisfy the 
+  ``approximate factoring'' condition $a_i (m\mod a_i) < m$ for each $i$.
+  MRGs are usually easier to implement under this condition \cite{rLEC90a}.
+  If {\tt SumPow2}, then the positive integers {\em NbPow2}
+  and {\em HighestBit\/} must appear and they indicate that 
+  for each $i$, the multiplier $a_i$ must be the sum of at most 
+  {\em NbPow2} (positive or negative) powers of 2, 
+  with the highest power of 2 not exceeding $2^e$ in absolute value,
+  where $e =$ {\em HighestBit}.  
+  For example, if {\em SumPow2\/} = 2 and {\em HighestBit\/} = 30,
+  there are $30 \times 31 /2$ possibilities for choosing the 2 powers of 
+  2 and 4 possibilities for choosing their signs, yielding
+  1860 cases where $a_i$ is obtained from exactly 2 powers of 2.
+  If one adds the $62$ cases where $a_i$ is $\pm$ a power of 2,
+  this gives a total of 1922 possibilities for $a_i$.
+%  In the case of {\tt SumPow2}, the bounds
+%  $b_j$ and $c_j$ on the multipliers (see below) are automatically
+%  (implicitly) reset to $b_j = -(2^{e+1}-1)$ and $c_j = 2^{e+1}-1$.
+%
+\item [$F1$ and \<{\em file1}\> :]
+  This line of data (and also the following one) is used only if 
+  maximal period is required and $m$ is assumed to be prime
+  (see the {\em Permax\/} field).  Otherwise, the program just skips it
+  (but the line must be there).
+  $F1$ indicates how the factors of $m-1$ are to be found and
+  \<{\em file1}\> is a file name.
+  The values allowed for $F1$ are {\tt (Decomp, DecompWrite, Read)}.
+  \begin {description}
+  \item  [{\tt Decomp}] means that the program itself will factorize
+    $m-1$.  In this case, the field \<{\em file1}\> is not used and can be
+    omitted.
+    To factorize, the program uses the procedure
+    {\tt Factorize} in the module {\tt SUPFACT} of the package SENTIERS
+    \cite {iLEC88d}, with no CPU time limit.
+    It is the responsibility of the user to make sure that the
+    factorization will take a reasonable time.
+  \item [{\tt DecompWrite}] means the same as {\tt Decomp}, except that
+    the program will also write the factors (larger than 1) in the file
+    \<{\em file1}\>, one factor per line.
+  \item [{\tt Read}] indicates that $m-1$ is already factorized and that
+    the factors will be read from file \<{\em file1}\>, in the same format.
+    The factors need not be sorted, but must be one per line, and repeated
+    factors must be on successive lines.  The factorization must be
+    complete and the program will check if the product of all the factors
+    is really equal to $m-1$.
+  \end {description}
+%
+\item [$F2$ and \<{\em file2}\> :]
+  This data line is similar to the previous one, except that it concerns
+  $r=(m^{kw}-1)/(m-1)$ instead of $m-1$.
+  In this case, it is possible that $r$ be prime when $m$ is prime
+  (in contrast to $m-1$, which is then even).  
+  Therefore, the additional value {\tt Prime} is
+  allowed for $F2$, so that the set of possible values is
+  {\tt (Decomp, DecompWrite, Read, Prime)}.
+  The module {\tt SUPFACT} in SENTIERS \cite{iLEC88d} can be used independently
+  to factorize $r$ or to check its primality.
+  \begin {description}
+  \item [{\tt Prime}] indicates that $r$ is prime.
+  \end {description}
+%
+\item [$b=(b_1,\ldots,b_k)$ \rm and $c=(c_1,\ldots,c_k)$~:]
+  The $b_i$ and $c_i$ are integers such that
+  $-m < b_i \le c_i < m$ for $i=1,\dots,k$.
+  They determine the boundary of the (rectangular) area of search.
+%  When {\em ImplemCond} = {\tt SumPow2}, these values are not used.
+  For MMRGs ($w>1$), each $b_i$ and $c_i$ is replaced by a matrix of
+  size $w\times w$.  Each of these matrices is given line by line,
+  $w$ entries on each line of the data file.
+%
+\item [{\em SearchMethod} and $n,\, H,\, H_k$ :]
+  {\em SearchMethod} can be {\tt Exhaust} or {\tt Random}.
+  \begin {description}
+  \item  [{\tt Exhaust}] means that the search will be exhaustive over
+    all the region determined by $b$ and $c$.
+    The other parameters of this line are then useless and can be omitted.
+  \item  [{\tt Random}] asks for a random search, performed as described
+    in the first subsection of the description of {\tt seekl}.
+    The integer $n$ gives the number of subregions (clusters) to examine. 
+    If $w=1$, $H$ determines the size of these subregions, except for
+    the $k$th element of the vector $h$, where $H_k$ determines the size.
+%    The parameter $Hk$ is not used if $k = 1$.
+    The vector $h=(h_1,\ldots,h_k)$ is computed by the program as follows:
+    $h_i = \min (H, c_i-b_i+1),\ i=1,\ldots,k-1$, and
+    $h_k = \min (H_k, c_k-b_k+1)$.
+    If $w > 1$, ?????
+  \end {description}
+%
+\item [$C$:] 
+  The program will retain $C$ lists (or categories) of generators, 
+  according to the specifications given below.
+  One must have $1 \le C \le {\tt MaxCat}$.
+%
+\item [{\em NbGen$(1)$ ~MinMerit$(1)$ ~MaxMerit$(1)$} 
+        $d_1$ $t_{11}$ $\cdots$ $t_{1,d_1}$]
+\item [ \hskip 1in\vdots ] \
+\item [{\em NbGen$(C)$ ~MinMerit$(C)$ ~MaxMerit$(C)$} 
+        $d_C$ $t_{C1}$ $\cdots$ $t_{C,d_C}$] 
+  \ \\ \ \\
+  Integers which must satisfy the constraints: 
+  \begin {eqnarray*}
+   & 0\le {\em NbGen}(i) \le {\tt MaxNbGen},\\
+   & 0.0 \le {\it MinMerit}(c) \le {\it MaxMerit}(c) \le 1.0 &
+            \qquad\mbox{ for all } c, \\
+   & {\it MinMerit}(c) \le {\it MaxMerit}(c-1) & \qquad\mbox{ for } c > 1,\\
+   & d_1 \le \cdots\le d_C, \\
+   & {\tt BMaxDim} \ge t_{c1} \ge \cdots\ge t_{c d_c}\ge d_c &
+            \qquad\mbox{ for all } c, \\ 
+% t_{1d} \le \cdots\le t_{C d} \mbox{ for all } d. 
+%  -> Try keeping this constraint out.
+  \end {eqnarray*}
+  where {\tt BMaxDim} is defined in the module {\tt CONFIG}.
+
+  There will be {\em NbGen$(c)$} generators in the $c$th list.
+  The real numbers {\em MinMerit$(c)$ and MaxMerit$(c)$} represent 
+  the minimal and maximal values of the figure of
+  merit to keep a generator in the $c$th list.
+  That is, only the generators that satisfy 
+ \eq  
+  \mbox{\it MinMerit}(c) \le\sigma\le \mbox{\it MaxMerit}(c) 
+                                                   \label{con-merit}
+ \endeq 
+  are considered for category $c$ and for the categories $c' > c$.  
+  Because of this, {\it MinMerit}$(c)$ must be nondecreasing in $c$,
+  because the lower bound for category $c$ also
+  apply categories $c' > c$.
+  As soon as a generator does not satisfy the constraint (\ref{con-merit})
+  in a given dimension for a given category $c$,
+  it is discarded and no more time is spent to test it for $c' > c$.
+  When looking for good generators, one normally sets 
+  {\em MaxMerit}$(c)$ to 1.0 for each $c$.
+
+  For category $c$, the test (Beyer, spectral, \dots, depending on
+  the criterion) is performed in dimensions $kw+1$ to $t_{c1}$ 
+  for the vectors of successive values,
+  the pairs $(u_1, u_{j})$ are tested for $1 <j\le t_{c2}$,
+  the triples $(u_1, u_{j}, u_{\ell})$ are tested for $1 <j <\ell\le t_{c3}$,
+  and so on.  
+  If lacunary indices are specified in the field {\em LaGroupSizes},
+  all of this is applied to the vectors obtained {\em after\/} taking
+  the lacunary indices, and the test for successive values starts in 
+  2 dimensions instead of $kw+1$.
+  To {\em minimize\/} (instead of maximizing) the criterion within a 
+  given category $c$, place a {\em negative sign\/} in front of the value
+  of $d_c$ in the data file.
+  The program will then retain the {\em worst\/} instead of the
+  {\em best\/} generators with respect to the category $c$.
+%
+\item [{\em Criterion} ~\<{\em Invert\/}\> ~\<{\em Norm\/}\> :]
+  Specifies the merit criterion for ranking the generators for each category.
+  The field {\em Invert\/} can be either {\tt Invert} or left blank.
+  In the former case, the value of the criterion is
+  replaced by its multiplicative inverse in the results.
+  The admissible values of {\em Criterion\/} are:
+  \begin {description}
+  \item [{\tt Beyer}] means that the criterion is $Q_T$.
+    The program will retain the generators with the largest 
+    (or smallest) $Q_T$ in each category.
+  \item [{\tt Spectral}] means that the criterion is $M_T$.
+    The program will retain the generators with the largest values
+    (or smallest) $M_T$ in each category.
+  \item [{\tt SpectralP}] is similar to {\tt Spectral}, except that
+    it is based on the shortest vector in the {\em primal\/} lattice.
+  \item [{\tt SpectralL1}] is similar to {\tt Spectral}, except that
+    the length of the (dual) vectors are measured with the $L_1$ norm,
+    minus 1.  The length of the shortest dual vector is then an upper
+    bound on the minimal number of hyperplanes that cover all the points
+    (\cite{rDIE75a} and \cite{rKNU97a}, Exercises 3.3.4-15 and 16).
+  \item [{\tt Palpha} {\em Alpha}] means that the criterion is $P_\alpha$,
+    with the value of $\alpha$ specified just after the keyword {\tt Palpha}.
+    Specialized (much faster) implementations have been made for $\alpha = 2, 4, 6, 8$.
+  \end {description}
+  If {\em Criterion\/} is {\tt Spectral} or {\tt SpectralP}, 
+  then {\em Norm\/}
+  must appear and it indicates which type of normalization is used
+  in the definition of $S_t$.  The admissible values are
+  \begin {description}
+  \item [{\tt Hermite}] means that we use Hermite's bound.
+    In this case, $S_t$ is computed only up to dimension 8
+    and the criterion is $M_{\min(T, 8)}$.  
+    This is because for $t>8$, $d_t^*$ is
+    unknown, so $M_t$ cannot be computed.
+  \item  [{\tt Laminated}] means that we use for $d_t^*$ the value
+    of $d_t$ that corresponds to the laminated lattice in dimension $t$.
+    The criterion is then $M_{\min(T, 48)}$ 
+    (the programs knows this $d_t^*$ only for $t\le 48$).
+  \item  [{\tt Rogers}] means that $d_t^*$ is obtained from Rogers'
+    bound.  The criterion is then $M_{\min(T, 48)}$.
+  \end {description}
+  If {\em Criterion\/} is {\tt Palpha}, the field {\em Norm} must also
+  appear.  The admissible values for {\tt Palpha} are:
+  \begin {description}
+%  \item [{\tt ????? }] (Check the paper with Hickernell) ?????
+  \item [{\tt Weights}] followed on the next line by positive real numbers 
+  $\beta_0,\dots,\beta_t$ where $t= t_{C,1}$.  This means that the criterion
+  will be $\tilde P_{\alpha}$ defined in (\ref{eq:Palpha}).
+  In this case, $\alpha$ must be even.  The $\beta_j$'s are the weights
+  given to the different dimensions in the weighted version of $P_{\alpha}$.
+  \end {description}
+%
+\item [{\em LatticeInfo} :]
+  Indicates which figures of merit we want to compute and print.
+  The possibilities are the same as for the criterion, but we can compute
+  and print more than one.  It suffices to write more than one keywords
+  on this line.
+  Note that $q_t$ typically requires much more time to compute than $d_t$.
+  \begin {description}
+  \item [{\tt Beyer} :] Prints the values of $q_t$ up to dimension $T$.
+  \item [{\tt Spectral} :] Prints the values of $d_t$ up to dimension $T$ and
+    $S_t$ for $t\le\min (T, T^*)$, where $T^*=8$ if {\em Norm} = 
+    {\tt Hermite} and $T^* = 48$ otherwise.
+  \item [{\tt SpectralP}] is similar to {\tt Spectral}, except that
+    it is based on the shortest vector in the {\em primal\/} lattice.
+  \item [{\tt SpectralL1}] is similar to {\tt Spectral}, except that
+    the length of the (dual) vectors are measured with the $L_1$ norm,
+    minus 1.  The normalization is based on Minkowski's bound
+    (\cite{sFIS96a}, p. 618).
+  \item [{\tt Palpha} {\em Alpha} :] prints $P_\alpha$
+    with the value of $\alpha$ specified.
+  \end {description}
+%
+\item [{\em LatticeType} :]
+  Indicates whether to analyze the lattice generated by all possible states,
+  or a sublattice generated by the set of recurrent states or by a
+  subcycle of the generator.
+  The admissible values are {\tt (Full, Recurrent, Orbit, PrimePower)}.
+  \begin {description}
+  \item [{\tt Full} :] The complete lattice, generated by all possible
+     initial states, will be analyzed.
+  \item [{\tt Recurrent} :] If the (combined) generator has transient
+     states, then the lattice analyzed will be the sublattice generated by
+     the set of recurrent states.
+  \item[{\tt Orbit} :] The grid generated by the (forward) orbit of 
+     a state of the (combined) generator is analyzed. This state
+     is specified as follows. 
+     On the following $J$ lines, the initial state for each
+     component must be given. This is an integer vector with a number 
+     of components equal to the order of the component.
+  \item [{\tt PrimePower} :] In the case where some component is an MLCG
+     whose modulus is a power of a prime $p$, then the states visited over
+     a single orbit (subcycle) of that component generate a sublattice
+     (when $a \equiv 1 \pmod{p}$) or belong to the union of
+     $p-1$ sublattices (otherwise).  If {\em LatticeType\/} takes this value,
+     if a component is an MLCG ($k=1$), 
+     and if the modulus of that MLCG is given
+     in the data file in the form (b): $(x\ y\ z)$ with $z=0$ and $x$ prime, 
+     then what is analyzed
+     is one of those sublattices.  This is done by dividing the modulus
+     by the appropriate power of $p$, as described in \cite{rLEC97c}.
+     For example, if $p=2$ and $a \mod 8 = 5$, then the modulus is divided
+     by 4 as in \cite{rFIS90a,rKNU81a}.
+  \end {description}
+%
+\item [{\em LaGroupSizes, ~Spacing\/} :]
+  These data fields are positive integers, used to introduce lacunary indices.
+  If the respective values are $s$ and $d$, then we will analyze the
+  lattice structure of vectors of the form
+  $(u_{i+1}, \dots, u_{i+s}, u_{i+d+1},\dots, u_{i+d+s}, u_{i+2d+1},\dots,
+  u_{i+2d+s}, \dots)$, formed by groups of $s$ successive values,
+  taken $d$ values apart.
+  To analyze vectors of successive values (as usual), take $s=d=1$
+  or $s$ larger or equal to {\em MaxDim}.
+  To analyze lacunary indices that are not evenly spaced,
+  put $s = -t$ where {\em $t=$MaxDim\/} and then, on the $t$ lines that
+  follow, give the $t$ lacunary indices $i_1,\dots,i_t$, which are to
+  be interpreted as in Section 1.4.
+%
+\item [{\em VerifyBB} :]
+  Indicates whether or not the results of the branch-and-bound procedures
+  will be verified with formal error bounds on the numerical computational
+  errors.  The verification (if any) is performed using either
+  {\tt REDBAS2} or {\tt REDBAS3}.
+  When such a verification is not performed, the results are not
+  formally guaranteed, but computations are performed an order of
+  magnitude faster.  The possible values are:
+ \begin {description}
+ \item [{\tt VerifyAll2} :] Performs the verification for all the generators
+   examined, using {\tt REDBAS2}.
+ \item [{\tt VerifyRetained2} :] Performs the verification only for the
+   {\em NbGen\/} ``best'' generators retained, using {\tt REDBAS2}.
+ \item [{\tt VerifyAll3} :] Performs the verification for all the generators
+   examined, using {\tt REDBAS3}.
+ \item [{\tt VerifyRetained3} :] Performs the verification only for the
+   {\em NbGen\/} ``best'' generators retained, using {\tt REDBAS3}.
+ \item [{\tt NoVerify} :] Performs no verification at all.
+ \end {description}
+%
+\item [{\em MaxNodesBB} :]
+  An integer giving the maximum number of nodes to be examined in any
+  given branch-and-bound procedure when computing $d_t$ or $q_t$.
+  When that value is exceeded, the branch-and-bound is stopped and the
+  generator is rejected.  The number of generators rejected for that
+  reason is given in the results.
+  A small value of {\em MaxNodesBB} will make the program run faster
+  (sometimes much faster), permitting to examine more generators,
+  but will increase the chances of rejecting good generators.
+%
+\item [{\em TimeLimit} :]
+  A real number giving the maximal CPU time, in hours, given to the program
+  for performing its search.
+  When this time-limit expires, the partial results are printed, with a message.
+  For a random search, the number of subregions printed includes
+  the last region searched (whose search may not be finished).
+%
+\item [$S1,\, S2$ :]
+  Those integers are the seeds of the generator used during the
+  search, if necessary; e.g., to generate the $\alpha_i$'s.
+  Before starting the search, the program calls
+  {\tt SetSeed($S1, S2$)} form the module {\tt SUPRAND} of SENTIERS
+  and the module {\tt RAND} of SIMOD.
+  To perform a different random search in a region already studied,
+  just change these seeds.
+  One must have $1\le S1\le 2147483562$ and $1\le S2\le 2147483398$.
+%
+\item [{\em ResultForm} :]
+  Selects in which form the results will be given.
+  The possible values are {\tt (Terminal, RES, GEN, RESGEN)}.
+  Lowercases are also allowed.
+  \begin {description}
+   \item [{\tt Terminal}] indicates that the results will appear only on the
+     terminal screen.
+   \item [{\tt RES}] says that the results will be in a file with the same
+     name as the data file, but with extension ``{\tt .res}''.
+   \item [{\tt GEN}] says that the retained generators will be listed in
+     a file with the same name as the data file, with extension ``{\tt .gen}''.
+     This file can then be taken as input to the same program, for
+     example to perform a second pass with a more stringent criterion
+     or to compute higher dimensional lattice ``measures'' for the
+     retained generators.
+   \item [{\tt RESGEN}] means that the results will be in a ``{\tt .res}''
+     file {\em and} the retained generators will be listed in a ``{\tt .gen}''
+     file, as with {\tt RES} and {\tt GEN} above.
+  \end {description}
+\end {description}
+
